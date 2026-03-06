@@ -10,9 +10,10 @@ interface Props {
   usedTitles: string[];
   onSelect: (title: string) => void;
   label: string;
+  maxSelect?: number;
 }
 
-export function SavedIdeasPicker({ usedTitles, onSelect, label }: Props) {
+export function SavedIdeasPicker({ usedTitles, onSelect, label, maxSelect }: Props) {
   const { user } = useUser();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
 
@@ -38,15 +39,28 @@ export function SavedIdeasPicker({ usedTitles, onSelect, label }: Props) {
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-2">
+      <div className="flex items-center gap-2 mb-2 w-full">
         <p className="text-white/40 text-xs uppercase tracking-widest">{label}</p>
         {selectedCategoryId && (
-          <button
-            onClick={() => setSelectedCategoryId(null)}
-            className="text-white/30 hover:text-white/60 text-xs transition-colors"
-          >
-            ← back
-          </button>
+          <>
+            <button
+              onClick={() => setSelectedCategoryId(null)}
+              className="text-white/30 hover:text-white/60 text-xs transition-colors"
+            >
+              ← back
+            </button>
+            {ideasInCategory.length > 0 && (
+              <button
+                onClick={() => {
+                  const toAdd = maxSelect != null ? ideasInCategory.slice(0, maxSelect) : ideasInCategory;
+                  toAdd.forEach(idea => onSelect(idea.title));
+                }}
+                className="text-violet-400 hover:text-violet-300 text-xs transition-colors ml-auto"
+              >
+                + Add all ({Math.min(ideasInCategory.length, maxSelect ?? ideasInCategory.length)})
+              </button>
+            )}
+          </>
         )}
       </div>
 

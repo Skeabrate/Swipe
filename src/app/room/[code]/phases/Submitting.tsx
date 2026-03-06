@@ -133,6 +133,7 @@ export function Submitting() {
           usedTitles={mySuggestions.map(s => s.title)}
           onSelect={title => handleAdd(title)}
           label={t.savedIdeas}
+          maxSelect={room.max_suggestions - mySuggestions.length}
         />
       )}
 
