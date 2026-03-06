@@ -34,7 +34,7 @@ export async function POST(
     .select('is_ready')
     .eq('room_id', room.id);
 
-  const allReady = allParticipants?.every(p => p.is_ready || p.id === participant.id);
+  const allReady = allParticipants?.every((p: { is_ready: boolean }) => p.is_ready);
 
   if (allReady) {
     // Check if there are any suggestions
