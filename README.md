@@ -102,6 +102,16 @@ src/
     └── LanguageContext.tsx   # Language provider and hook
 ```
 
+## Production Deployments
+
+After pushing a new build to production, run the following SQL in Supabase to notify PWA clients of the update. Users will automatically reload the app the next time they focus it.
+
+```sql
+update app_version set released_at = now() where id = 1;
+```
+
+> The `app_version` table holds a single row. The app polls this value on window focus and force-reloads if it has changed since the session started.
+
 ## Scripts
 
 | Command | Description |
