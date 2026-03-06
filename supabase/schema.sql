@@ -81,3 +81,44 @@ create policy "public_read" on tiebreaker_picks for select using (true);
 -- ─── Realtime ─────────────────────────────────────────────────────────────────
 -- In Supabase dashboard: Database → Replication → supabase_realtime publication
 -- Make sure all 5 tables above are added to the publication.
+
+-- ─── Auth (Clerk) additions ────────────────────────────────────────────────────
+-- Run these after setting up Clerk
+
+alter table participants add column if not exists clerk_user_id text;
+alter table rooms add column if not exists clerk_user_id text;
+
+create table if not exists user_profiles (
+  id            uuid primary key default gen_random_uuid(),
+  clerk_user_id text unique not null,
+  username      text,
+  primary_color text default '#7c3aed',
+  created_at    timestamptz default now(),
+  updated_at    timestamptz default now()
+);
+
+create table if not exists user_categories (
+  id            uuid primary key default gen_random_uuid(),
+  clerk_user_id text not null,
+  name          text not null,
+  color         text default '#7c3aed',
+  created_at    timestamptz default now()
+);
+
+create table if not exists user_ideas (
+  id               uuid primary key default gen_random_uuid(),
+  clerk_user_id    text not null,
+  category_id      uuid references user_categories(id) on delete set null,
+  title            text not null,
+  source_room_code text,
+  created_at       timestamptz default now()
+);
+
+alter table user_profiles enable row level security;
+alter table user_categories enable row level security;
+alter table user_ideas enable row level security;
+
+create policy "public_read" on user_profiles for select using (true);
+create policy "public_read" on user_categories for select using (true);
+create policy "public_read" on user_ideas for select using (true);
+-- Writes handled by API routes using the service role key (bypasses RLS)

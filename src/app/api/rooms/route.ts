@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 import { generateRoomCode } from '@/lib/roomCode';
 
 export async function POST(req: NextRequest) {
   const { name, topic, maxSuggestions, anonymous } = await req.json();
+  const { userId } = await auth();
 
   if (!name?.trim() || !topic?.trim()) {
     return NextResponse.json({ error: 'Name and topic are required' }, { status: 400 });
@@ -30,6 +32,7 @@ export async function POST(req: NextRequest) {
       max_suggestions: maxSuggestions ?? 10,
       anonymous: anonymous ?? true,
       host_session_token: sessionToken,
+      ...(userId ? { clerk_user_id: userId } : {}),
     })
     .select()
     .single();
@@ -41,7 +44,7 @@ export async function POST(req: NextRequest) {
   // Create host participant
   const { data: participant, error: partErr } = await db
     .from('participants')
-    .insert({ room_id: room.id, name: name.trim(), session_token: sessionToken })
+    .insert({ room_id: room.id, name: name.trim(), session_token: sessionToken, ...(userId ? { clerk_user_id: userId } : {}) })
     .select()
     .single();
 

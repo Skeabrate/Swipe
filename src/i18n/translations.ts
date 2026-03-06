@@ -71,6 +71,34 @@ export const translations = {
     languageLabel: 'Language',
     goHome: 'Go to home',
 
+    // Auth
+    signIn: 'Sign in',
+    signUp: 'Sign up',
+    myIdeas: 'My Ideas',
+    history: 'History',
+
+    // History page
+    roomHistory: 'Room History',
+    noRoomsYet: 'No rooms yet. Create or join a room to get started.',
+    saveToIdeas: 'Save to My Ideas',
+    ideaSaved: (title: string) => `"${title}" saved to ideas`,
+    saveIdeaTo: (title: string) => `Save "${title}" to...`,
+    noCategory: 'No category',
+
+    // Profile page
+    myProfile: 'My Profile',
+    accentColor: 'Accent color',
+    saving: 'Saving...',
+    profileSaved: 'Profile saved',
+    addCategory: 'Add category',
+    categoryNamePlaceholder: 'Category name...',
+    newIdeaPlaceholder: 'New idea...',
+    addIdea: 'Add idea',
+    uncategorized: 'Uncategorized',
+    noIdeasYet: 'No ideas saved yet.',
+    addFirstIdea: 'Add your first idea',
+    customColor: 'Custom color',
+
     // Dynamic
     addedCount: (n: number, max: number) => `${n}/${max} added`,
     readyCount: (done: number, total: number) => `${done}/${total} ready`,
@@ -146,6 +174,34 @@ export const translations = {
     settingsTitle: 'Ustawienia',
     languageLabel: 'Język',
     goHome: 'Wróć do strony głównej',
+
+    // Auth
+    signIn: 'Zaloguj',
+    signUp: 'Zarejestruj',
+    myIdeas: 'Moje pomysły',
+    history: 'Historia',
+
+    // History page
+    roomHistory: 'Historia pokojów',
+    noRoomsYet: 'Brak pokojów. Utwórz lub dołącz do pokoju, żeby zacząć.',
+    saveToIdeas: 'Zapisz do pomysłów',
+    ideaSaved: (title: string) => `"${title}" zapisano do pomysłów`,
+    saveIdeaTo: (title: string) => `Zapisz "${title}" do...`,
+    noCategory: 'Bez kategorii',
+
+    // Profile page
+    myProfile: 'Mój profil',
+    accentColor: 'Kolor akcentu',
+    saving: 'Zapisywanie...',
+    profileSaved: 'Profil zapisany',
+    addCategory: 'Dodaj kategorię',
+    categoryNamePlaceholder: 'Nazwa kategorii...',
+    newIdeaPlaceholder: 'Nowy pomysł...',
+    addIdea: 'Dodaj pomysł',
+    uncategorized: 'Bez kategorii',
+    noIdeasYet: 'Brak zapisanych pomysłów.',
+    addFirstIdea: 'Dodaj pierwszy pomysł',
+    customColor: 'Własny kolor',
 
     // Dynamic
     addedCount: (n: number, max: number) => `${n}/${max} dodanych`,

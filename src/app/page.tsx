@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Loader2, Plus, Users, ChevronLeft } from 'lucide-react';
+import { ArrowRight, Loader2, Plus, Users, ChevronLeft, BookOpen, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,12 +12,14 @@ import { Slider } from '@/components/ui/slider';
 import { saveSession } from '@/lib/session';
 import { toast } from 'sonner';
 import { useT } from '@/i18n/LanguageContext';
+import { useUser, SignInButton, SignUpButton, UserButton, Show } from '@clerk/nextjs';
 
 type Mode = 'home' | 'create' | 'join';
 
 export default function Home() {
   const router = useRouter();
   const { t } = useT();
+  const { isSignedIn, user } = useUser();
   const [mode, setMode] = useState<Mode>('home');
 
   // Create form
@@ -29,6 +31,14 @@ export default function Home() {
 
   // Join form
   const [roomCode, setRoomCode] = useState('');
+
+  // Auto-fill name when user is signed in
+  useEffect(() => {
+    if (isSignedIn && user) {
+      const name = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.username || '';
+      setCreateName(name);
+    }
+  }, [isSignedIn, user]);
 
   const createRoom = async () => {
     if (!createName.trim() || !topic.trim()) return;
@@ -76,6 +86,27 @@ export default function Home() {
             transition={{ duration: 0.2 }}
             className="flex flex-col h-full px-6 pb-12 justify-between"
           >
+            {/* Auth area — h-10 + pt-4 matches the fixed settings cog position */}
+            <div className="flex justify-end items-center pt-4 h-[56px] pr-14">
+              <Show when="signed-out">
+                <div className="flex gap-2 items-center">
+                  <SignInButton mode="modal">
+                    <button className="text-white/50 hover:text-white text-sm transition-colors px-3 h-10 rounded-lg hover:bg-white/10">
+                      {t.signIn}
+                    </button>
+                  </SignInButton>
+                  <SignUpButton mode="modal">
+                    <button className="text-white text-sm font-medium px-3 h-10 rounded-lg bg-white/10 hover:bg-white/15 transition-colors">
+                      {t.signUp}
+                    </button>
+                  </SignUpButton>
+                </div>
+              </Show>
+              <Show when="signed-in">
+                <UserButton appearance={{ elements: { avatarBox: 'w-10 h-10', userButtonPopoverCard: 'mr-2' } }} />
+              </Show>
+            </div>
+
             {/* Logo area */}
             <div className="flex-1 flex flex-col items-center justify-center gap-6">
               <motion.div
@@ -129,6 +160,26 @@ export default function Home() {
               >
                 <Users size={22} /> {t.joinWithCode}
               </Button>
+
+              {/* Logged-in quick links */}
+              <Show when="signed-in">
+                <div className="flex gap-2 pt-1">
+                  <Button
+                    onClick={() => router.push('/profile')}
+                    variant="outline"
+                    className="flex-1 h-12 rounded-2xl bg-white/5 hover:bg-white/10 border-white/15 text-white/70 hover:text-white gap-2 text-sm"
+                  >
+                    <BookOpen size={16} /> {t.myIdeas}
+                  </Button>
+                  <Button
+                    onClick={() => router.push('/history')}
+                    variant="outline"
+                    className="flex-1 h-12 rounded-2xl bg-white/5 hover:bg-white/10 border-white/15 text-white/70 hover:text-white gap-2 text-sm"
+                  >
+                    <History size={16} /> {t.history}
+                  </Button>
+                </div>
+              </Show>
             </motion.div>
           </motion.div>
         )}
@@ -150,17 +201,29 @@ export default function Home() {
             </div>
 
             <div className="flex-1 space-y-5 overflow-auto pb-1">
-              <div className="space-y-2">
-                <Label className="text-white/60 text-sm">{t.yourName}</Label>
-                <Input
-                  value={createName}
-                  onChange={e => setCreateName(e.target.value)}
-                  placeholder={t.namePlaceholder}
-                  className="bg-white/10 border-white/20 text-white placeholder:text-white/30 rounded-xl h-13"
-                  maxLength={30}
-                  autoFocus
-                />
-              </div>
+              {isSignedIn ? (
+                <div className="space-y-2">
+                  <Label className="text-white/60 text-sm">{t.yourName}</Label>
+                  <div className="flex items-center gap-3 bg-white/10 border border-white/20 rounded-xl h-13 px-4">
+                    <UserButton
+                      appearance={{ elements: { avatarBox: 'w-6 h-6', userButtonPopoverCard: 'mr-2' } }}
+                    />
+                    <span className="text-white font-medium">{createName}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label className="text-white/60 text-sm">{t.yourName}</Label>
+                  <Input
+                    value={createName}
+                    onChange={e => setCreateName(e.target.value)}
+                    placeholder={t.namePlaceholder}
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/30 rounded-xl h-13"
+                    maxLength={30}
+                    autoFocus
+                  />
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label className="text-white/60 text-sm">{t.whatDeciding}</Label>
@@ -171,6 +234,7 @@ export default function Home() {
                   placeholder={t.topicPlaceholder}
                   className="bg-white/10 border-white/20 text-white placeholder:text-white/30 rounded-xl h-13"
                   maxLength={60}
+                  autoFocus={isSignedIn}
                 />
                 <div className="flex flex-wrap gap-2 pt-1">
                   {t.topicChips.map(chip => (

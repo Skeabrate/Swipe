@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 
 export async function POST(
@@ -7,6 +8,7 @@ export async function POST(
 ) {
   const { code } = await params;
   const { name } = await req.json();
+  const { userId } = await auth();
 
   if (!name?.trim()) {
     return NextResponse.json({ error: 'Name is required' }, { status: 400 });
@@ -35,7 +37,7 @@ export async function POST(
 
   const { data: participant, error: partErr } = await db
     .from('participants')
-    .insert({ room_id: room.id, name: name.trim(), session_token: sessionToken })
+    .insert({ room_id: room.id, name: name.trim(), session_token: sessionToken, ...(userId ? { clerk_user_id: userId } : {}) })
     .select()
     .single();
 

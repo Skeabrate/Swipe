@@ -1,0 +1,206 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { useUser } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+import { Trophy, BookmarkPlus, Check } from 'lucide-react';
+import { toast } from 'sonner';
+import { useT } from '@/i18n/LanguageContext';
+import { PageHeader } from '@/components/PageHeader';
+
+interface Suggestion {
+  id: string;
+  title: string;
+  score: number;
+}
+
+interface RoomHistory {
+  id: string;
+  code: string;
+  topic: string;
+  phase: string;
+  created_at: string;
+  suggestions: Suggestion[];
+  winner: Suggestion | null;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  color: string;
+}
+
+export default function HistoryPage() {
+  const { isSignedIn, isLoaded } = useUser();
+  const router = useRouter();
+  const { t } = useT();
+
+  const [rooms, setRooms] = useState<RoomHistory[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [savingIdea, setSavingIdea] = useState<string | null>(null);
+  const [savedIdeas, setSavedIdeas] = useState<Set<string>>(new Set());
+  const [pickerFor, setPickerFor] = useState<{ title: string; roomCode: string } | null>(null);
+
+  const fetchAll = useCallback(async () => {
+    const [roomsRes, catRes] = await Promise.all([
+      fetch('/api/user/rooms'),
+      fetch('/api/user/categories'),
+    ]);
+    const [roomsData, catData] = await Promise.all([roomsRes.json(), catRes.json()]);
+    setRooms(Array.isArray(roomsData) ? roomsData : []);
+    setCategories(Array.isArray(catData) ? catData : []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) router.replace('/');
+    if (isSignedIn) fetchAll();
+  }, [isLoaded, isSignedIn, router, fetchAll]);
+
+  const saveIdea = async (title: string, roomCode: string, categoryId: string | null) => {
+    const key = `${roomCode}:${title}`;
+    setSavingIdea(key);
+    const res = await fetch('/api/user/ideas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, source_room_code: roomCode, category_id: categoryId }),
+    });
+    setSavingIdea(null);
+    setPickerFor(null);
+    if (res.ok) {
+      setSavedIdeas(prev => new Set(prev).add(key));
+      toast.success(t.ideaSaved(title));
+    } else {
+      toast.error('Failed to save idea');
+    }
+  };
+
+  const formatDate = (iso: string) => {
+    return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  if (!isLoaded || loading) {
+    return (
+      <div className="h-dvh bg-[#0a0a0f] flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <main className="min-h-dvh bg-[#0a0a0f] text-white pb-16">
+      <div className="max-w-lg mx-auto px-6">
+        <PageHeader title={t.roomHistory} />
+
+        {rooms.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-white/30 text-sm">{t.noRoomsYet}</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {rooms.map(room => (
+              <div key={room.id} className="bg-white/5 rounded-2xl overflow-hidden">
+                {/* Room header */}
+                <div className="px-4 py-4 border-b border-white/10">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h3 className="text-white font-semibold">{room.topic}</h3>
+                      <p className="text-white/40 text-xs mt-0.5">{formatDate(room.created_at)} · #{room.code}</p>
+                    </div>
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium flex-shrink-0 ${
+                      room.phase === 'results'
+                        ? 'bg-green-500/20 text-green-400'
+                        : 'bg-white/10 text-white/50'
+                    }`}>
+                      {room.phase}
+                    </span>
+                  </div>
+                  {room.winner && (
+                    <div className="flex items-center gap-2 mt-3 bg-yellow-500/10 rounded-xl px-3 py-2">
+                      <Trophy size={14} className="text-yellow-400 flex-shrink-0" />
+                      <span className="text-yellow-300 text-sm font-medium truncate">{room.winner.title}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Suggestions list */}
+                {room.suggestions.length > 0 && (
+                  <ul className="divide-y divide-white/5">
+                    {room.suggestions.map(s => {
+                      const key = `${room.code}:${s.title}`;
+                      const saved = savedIdeas.has(key);
+                      const saving = savingIdea === key;
+                      return (
+                        <li key={s.id} className="flex items-center justify-between px-4 py-2.5 gap-3">
+                          <span className="text-white/70 text-sm flex-1 min-w-0 truncate">{s.title}</span>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className="text-white/30 text-xs tabular-nums">
+                              {s.score > 0 ? `+${s.score}` : s.score}
+                            </span>
+                            {saved ? (
+                              <span className="text-green-400"><Check size={15} /></span>
+                            ) : (
+                              <button
+                                disabled={saving}
+                                onClick={() => {
+                                  if (categories.length === 0) {
+                                    saveIdea(s.title, room.code, null);
+                                  } else {
+                                    setPickerFor({ title: s.title, roomCode: room.code });
+                                  }
+                                }}
+                                className="text-white/30 hover:text-violet-400 transition-colors"
+                                title={t.saveToIdeas}
+                              >
+                                <BookmarkPlus size={16} />
+                              </button>
+                            )}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Category picker sheet */}
+      {pickerFor && (
+        <div
+          className="fixed inset-0 bg-black/60 z-50 flex items-end"
+          onClick={() => setPickerFor(null)}
+        >
+          <div
+            className="w-full bg-[#13121a] rounded-t-3xl p-6 space-y-4"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="text-white font-semibold">{t.saveIdeaTo(pickerFor.title)}</h3>
+            <div className="space-y-2">
+              {categories.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => saveIdea(pickerFor.title, pickerFor.roomCode, cat.id)}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-left"
+                >
+                  <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
+                  <span className="text-white text-sm">{cat.name}</span>
+                </button>
+              ))}
+              <button
+                onClick={() => saveIdea(pickerFor.title, pickerFor.roomCode, null)}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-left"
+              >
+                <div className="w-3 h-3 rounded-full flex-shrink-0 border border-white/30" />
+                <span className="text-white/60 text-sm">{t.noCategory}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </main>
+  );
+}
