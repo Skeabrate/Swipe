@@ -145,7 +145,9 @@ export default function HistoryPage() {
                                 disabled={saving}
                                 onClick={() => {
                                   if (categories.length === 0) {
-                                    saveIdea(s.title, room.code, null);
+                                    toast(t.noCategoriesHint, {
+                                      action: { label: t.addCategory, onClick: () => router.push('/profile') },
+                                    });
                                   } else {
                                     setPickerFor({ title: s.title, roomCode: room.code });
                                   }
@@ -190,13 +192,6 @@ export default function HistoryPage() {
                   <span className="text-white text-sm">{cat.name}</span>
                 </button>
               ))}
-              <button
-                onClick={() => saveIdea(pickerFor.title, pickerFor.roomCode, null)}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-left"
-              >
-                <div className="w-3 h-3 rounded-full flex-shrink-0 border border-white/30" />
-                <span className="text-white/60 text-sm">{t.noCategory}</span>
-              </button>
             </div>
           </div>
         </div>

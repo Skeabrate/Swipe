@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Trash2, Check, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,23 +9,58 @@ import { Badge } from '@/components/ui/badge';
 import { useRoom } from '../RoomContext';
 import { toast } from 'sonner';
 import { useT } from '@/i18n/LanguageContext';
+import { useUser } from '@clerk/nextjs';
+
+interface SavedIdea {
+  id: string;
+  title: string;
+  category_id: string | null;
+  user_categories: { id: string; name: string; color: string } | null;
+}
 
 export function Submitting() {
   const { room, participants, suggestions, session, isHost } = useRoom();
   const { t } = useT();
+  const { user } = useUser();
   const [input, setInput] = useState('');
   const [adding, setAdding] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [forceStarting, setForceStarting] = useState(false);
+  const [savedIdeas, setSavedIdeas] = useState<SavedIdea[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    fetch('/api/user/ideas')
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setSavedIdeas(data ?? []));
+  }, [user]);
 
   const mySuggestions = suggestions.filter(s => s.participant_id === session.participantId);
   const me = participants.find(p => p.id === session.participantId);
   const readyCount = participants.filter(p => p.is_ready).length;
   const canAdd = !me?.is_ready && mySuggestions.length < room.max_suggestions;
 
-  const addSuggestion = async () => {
-    const title = input.trim();
+  const unusedSavedIdeas = savedIdeas.filter(
+    idea => !mySuggestions.some(s => s.title === idea.title)
+  );
+
+  // Derive categories that have at least one unused idea
+  const savedCategories = Array.from(
+    new Map(
+      unusedSavedIdeas
+        .filter(i => i.user_categories)
+        .map(i => [i.user_categories!.id, i.user_categories!])
+    ).values()
+  );
+
+  const ideasInSelectedCategory = selectedCategoryId
+    ? unusedSavedIdeas.filter(i => i.category_id === selectedCategoryId)
+    : [];
+
+  const addSuggestion = async (titleOverride?: string) => {
+    const title = (titleOverride ?? input).trim();
     if (!title) return;
     setAdding(true);
     const res = await fetch(`/api/rooms/${room.code}/suggestions`, {
@@ -34,8 +69,10 @@ export function Submitting() {
       body: JSON.stringify({ title }),
     });
     if (res.ok) {
-      setInput('');
-      inputRef.current?.focus();
+      if (!titleOverride) {
+        setInput('');
+        inputRef.current?.focus();
+      }
     } else {
       const err = await res.json();
       toast.error(err.error ?? 'Failed to add');
@@ -143,6 +180,51 @@ export function Submitting() {
         )}
       </div>
 
+      {/* Saved ideas picker — step 1: categories, step 2: ideas */}
+      {canAdd && savedCategories.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <p className="text-white/40 text-xs uppercase tracking-widest">{t.savedIdeas}</p>
+            {selectedCategoryId && (
+              <button
+                onClick={() => setSelectedCategoryId(null)}
+                className="text-white/30 hover:text-white/60 text-xs transition-colors"
+              >
+                ← back
+              </button>
+            )}
+          </div>
+
+          {selectedCategoryId === null ? (
+            <div className="flex flex-wrap gap-2">
+              {savedCategories.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategoryId(cat.id)}
+                  className="flex items-center gap-1.5 text-sm bg-white/10 hover:bg-white/15 text-white/70 hover:text-white rounded-full px-3 py-1.5 transition-colors"
+                >
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {ideasInSelectedCategory.map(idea => (
+                <button
+                  key={idea.id}
+                  onClick={() => addSuggestion(idea.title)}
+                  disabled={adding}
+                  className="text-sm bg-white/10 hover:bg-violet-600/50 text-white/70 hover:text-white rounded-full px-3 py-1.5 transition-colors disabled:opacity-50"
+                >
+                  {idea.title}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Input */}
       {canAdd && (
         <div className="flex gap-2">
@@ -156,7 +238,7 @@ export function Submitting() {
             maxLength={80}
           />
           <Button
-            onClick={addSuggestion}
+            onClick={() => addSuggestion()}
             disabled={adding || !input.trim()}
             className="h-12 w-12 rounded-xl bg-violet-600 hover:bg-violet-500 p-0"
           >

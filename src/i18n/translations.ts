@@ -45,6 +45,7 @@ export const translations = {
     doneStartVoting: 'Done! Start voting',
     forceStartBtn: 'Force start voting now (host)',
     cantStartNoSuggestions: "Can't start — no suggestions yet!",
+    savedIdeas: 'Your saved ideas',
 
     // Voting
     youAreDoneVoting: "You're done!",
@@ -98,6 +99,10 @@ export const translations = {
     noIdeasYet: 'No ideas saved yet.',
     addFirstIdea: 'Add your first idea',
     customColor: 'Custom color',
+    noCategoriesHint: 'Create a category first to start adding ideas',
+    deleteCategoryConfirm: (name: string, count: number) =>
+      `Delete "${name}"? This will also delete ${count} idea${count === 1 ? '' : 's'} inside it.`,
+    deleteCategoryConfirm2: 'Are you sure? This cannot be undone.',
 
     // Dynamic
     addedCount: (n: number, max: number) => `${n}/${max} added`,
@@ -149,6 +154,7 @@ export const translations = {
     doneStartVoting: 'Gotowe! Zacznij głosowanie',
     forceStartBtn: 'Wymuś start głosowania (host)',
     cantStartNoSuggestions: 'Nie można zacząć — brak propozycji!',
+    savedIdeas: 'Twoje pomysły',
 
     // Voting
     youAreDoneVoting: 'Gotowe!',
@@ -202,6 +208,10 @@ export const translations = {
     noIdeasYet: 'Brak zapisanych pomysłów.',
     addFirstIdea: 'Dodaj pierwszy pomysł',
     customColor: 'Własny kolor',
+    noCategoriesHint: 'Najpierw utwórz kategorię, by dodać pomysły',
+    deleteCategoryConfirm: (name: string, count: number) =>
+      `Usunąć "${name}"? Spowoduje to również usunięcie ${count} ${count === 1 ? 'pomysłu' : 'pomysłów'} w środku.`,
+    deleteCategoryConfirm2: 'Jesteś pewien? Tej operacji nie można cofnąć.',
 
     // Dynamic
     addedCount: (n: number, max: number) => `${n}/${max} dodanych`,
