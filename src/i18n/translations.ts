@@ -80,6 +80,8 @@ export const translations = {
     // JoinGate
     joining: 'Joining',
     joinRoomBtn: 'Join room',
+    useAccountName: 'Use account name',
+    useCustomName: 'Use a different name',
 
     // Settings
     settingsTitle: 'Settings',
@@ -214,6 +216,8 @@ export const translations = {
     // JoinGate
     joining: 'Dołączanie do',
     joinRoomBtn: 'Dołącz do pokoju',
+    useAccountName: 'Użyj konta',
+    useCustomName: 'Użyj innego imienia',
 
     // Settings
     settingsTitle: 'Ustawienia',

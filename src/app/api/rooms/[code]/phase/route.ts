@@ -42,7 +42,10 @@ export async function POST(
     await db.from('rooms').update({ phase: 'voting' }).eq('id', room.id);
   } else if (phase === 'wheel') {
     // Spin the wheel — pick a random suggestion
-    if (room.phase !== 'submitting') return NextResponse.json({ error: 'Invalid transition' }, { status: 400 });
+    // Allow from submitting (open mode) or lobby (predefined mode)
+    const fromLobbyPredefined = room.phase === 'lobby' && room.ideas_mode === 'predefined';
+    if (room.phase !== 'submitting' && !fromLobbyPredefined)
+      return NextResponse.json({ error: 'Invalid transition' }, { status: 400 });
     const { data: suggestionsList } = await db
       .from('suggestions')
       .select('id')

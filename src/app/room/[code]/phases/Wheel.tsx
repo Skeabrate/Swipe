@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useRoom } from '../RoomContext';
 import { useT } from '@/i18n/LanguageContext';
-import { toast } from 'sonner';
 
 const PALETTE = [
   '#7c3aed', '#2563eb', '#059669', '#d97706', '#dc2626', '#db2777',
@@ -112,10 +112,10 @@ function WheelSVG({
 }
 
 export function Wheel() {
-  const { room, suggestions, session, isHost } = useRoom();
+  const { room, suggestions } = useRoom();
   const { t } = useT();
+  const router = useRouter();
   const [spinning, setSpinning] = useState(true);
-  const [revealing, setRevealing] = useState(false);
   const confettiFired = useRef(false);
 
   const n = suggestions.length;
@@ -141,20 +141,6 @@ export function Wheel() {
     }, 4700);
     return () => clearTimeout(timer);
   }, []);
-
-  const revealResults = async () => {
-    setRevealing(true);
-    const res = await fetch(`/api/rooms/${room.code}/phase`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.token}` },
-      body: JSON.stringify({ phase: 'results' }),
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      toast.error(err.error ?? 'Failed');
-      setRevealing(false);
-    }
-  };
 
   const winner = winnerIdx >= 0 ? suggestions[winnerIdx] : null;
   const showLegend = n > 8;
@@ -183,11 +169,14 @@ export function Wheel() {
           <div className="rounded-3xl bg-gradient-to-br from-violet-600 to-purple-800 p-6 shadow-2xl shadow-violet-500/30">
             <p className="text-white/70 text-sm mb-1">{t.chosenByWheel} 🎡</p>
             <p className="text-white font-black text-3xl">{winner.title}</p>
+            {!room.anonymous && winner.participant && (
+              <p className="text-white/50 mt-2 text-sm">{t.byAuthor(winner.participant.name)}</p>
+            )}
           </div>
         </motion.div>
       )}
 
-      {showLegend && (
+      {spinning && showLegend && (
         <div className="w-full space-y-1">
           {suggestions.map((s, i) => (
             <div key={s.id} className="flex items-center gap-2 text-sm">
@@ -197,27 +186,41 @@ export function Wheel() {
               >
                 {i + 1}
               </span>
-              <span className={s.id === room.wheel_winner_id ? 'text-white font-bold' : 'text-white/60'}>
-                {s.title}
-              </span>
+              <span className="text-white/60">{s.title}</span>
             </div>
           ))}
         </div>
       )}
 
+      {!spinning && suggestions.length > 1 && (
+        <div className="w-full">
+          <p className="text-white/40 text-xs uppercase tracking-widest mb-3">{t.allPicks}</p>
+          <div className="space-y-2">
+            {suggestions.map((s, i) => (
+              <div
+                key={s.id}
+                className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${
+                  s.id === room.wheel_winner_id ? 'bg-violet-500/20 border border-violet-500/30' : 'bg-white/5'
+                }`}
+              >
+                <span className="text-white/30 text-sm w-5 text-right flex-shrink-0">{i + 1}</span>
+                <span className={`flex-1 text-sm font-medium ${s.id === room.wheel_winner_id ? 'text-white' : 'text-white/60'}`}>
+                  {s.title}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {!spinning && (
         <div className="w-full mt-auto">
-          {isHost ? (
-            <Button
-              onClick={revealResults}
-              disabled={revealing}
-              className="w-full h-14 text-base font-bold rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0 text-white"
-            >
-              {t.wheelRevealResults}
-            </Button>
-          ) : (
-            <p className="text-center text-white/40 text-sm">{t.wheelWaitingReveal}</p>
-          )}
+          <Button
+            onClick={() => router.push('/')}
+            className="w-full h-14 text-base font-bold rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0 text-white"
+          >
+            {t.newRoom}
+          </Button>
         </div>
       )}
     </div>

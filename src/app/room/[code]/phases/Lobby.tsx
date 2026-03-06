@@ -12,6 +12,7 @@ import { useT } from "@/i18n/LanguageContext";
 import { SavedIdeasPicker } from "@/components/SavedIdeasPicker";
 import { useMutation } from "@tanstack/react-query";
 import * as api from "@/lib/api";
+import { SpinWheelButton } from "../SpinWheelButton";
 
 export function Lobby() {
   const { room, participants, suggestions, session, isHost } = useRoom();
@@ -208,19 +209,22 @@ export function Lobby() {
         </button>
 
         {isHost ? (
-          <Button
-            onClick={() => startRoomMutation.mutate(isPredefined ? "voting" : "submitting")}
-            disabled={startRoomMutation.isPending || participants.length < 1}
-            className='w-full h-14 text-base font-bold rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0 text-white'
-          >
-            {startRoomMutation.isPending ? (
-              t.startingLabel
-            ) : (
-              <span className='flex items-center gap-2'>
-                {isPredefined ? t.startVoting : t.startEveryoneAdd} <ArrowRight size={18} />
-              </span>
-            )}
-          </Button>
+          <>
+            <Button
+              onClick={() => startRoomMutation.mutate(isPredefined ? "voting" : "submitting")}
+              disabled={startRoomMutation.isPending || participants.length < 1}
+              className='w-full h-14 text-base font-bold rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0 text-white'
+            >
+              {startRoomMutation.isPending ? (
+                t.startingLabel
+              ) : (
+                <span className='flex items-center gap-2'>
+                  {isPredefined ? t.startVoting : t.startEveryoneAdd} <ArrowRight size={18} />
+                </span>
+              )}
+            </Button>
+            {isPredefined && <SpinWheelButton />}
+          </>
         ) : (
           <div className='text-center text-white/40 text-sm py-2'>{t.waitingForHost}</div>
         )}

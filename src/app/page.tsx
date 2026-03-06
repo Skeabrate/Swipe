@@ -27,6 +27,7 @@ export default function Home() {
 
   // Create form
   const [createName, setCreateName] = useState("");
+  const [useCustomCreateName, setUseCustomCreateName] = useState(false);
   const [topic, setTopic] = useState("");
   const [maxSuggestions, setMaxSuggestions] = useState(10);
   const [anonymous, setAnonymous] = useState(false);
@@ -206,10 +207,44 @@ export default function Home() {
               {isSignedIn ? (
                 <div className='space-y-2'>
                   <Label className='text-white/60 text-sm'>{t.yourName}</Label>
-                  <div className='flex items-center gap-3 bg-white/10 border border-white/20 rounded-xl h-13 px-4'>
-                    <UserButton appearance={{ elements: { avatarBox: "w-6 h-6", userButtonPopoverCard: "mr-2" } }} />
-                    <span className='text-white font-medium'>{createName}</span>
-                  </div>
+                  {!useCustomCreateName ? (
+                    <div className='space-y-2'>
+                      <div className='flex items-center gap-3 bg-white/10 border border-white/20 rounded-xl h-13 px-4'>
+                        <UserButton
+                          appearance={{ elements: { avatarBox: "w-6 h-6", userButtonPopoverCard: "mr-2" } }}
+                        />
+                        <span className='text-white font-medium'>{createName}</span>
+                      </div>
+                      <button
+                        onClick={() => setUseCustomCreateName(true)}
+                        className='text-white/40 text-xs hover:text-white/60 transition-colors'
+                      >
+                        {t.useCustomName}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className='space-y-2'>
+                      <Input
+                        value={createName}
+                        onChange={(e) => setCreateName(e.target.value)}
+                        placeholder={t.namePlaceholder}
+                        className='bg-white/10 border-white/20 text-white placeholder:text-white/30 rounded-xl h-13'
+                        maxLength={30}
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => {
+                          const name =
+                            [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.username || "";
+                          setCreateName(name);
+                          setUseCustomCreateName(false);
+                        }}
+                        className='text-white/40 text-xs hover:text-white/60 transition-colors'
+                      >
+                        {t.useAccountName}
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className='space-y-2'>
