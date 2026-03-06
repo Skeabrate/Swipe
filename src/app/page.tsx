@@ -86,7 +86,7 @@ export default function Home() {
             className='flex flex-col h-full px-6 pb-12 justify-between'
           >
             {/* Auth area — h-10 + pt-4 matches the fixed settings cog position */}
-            <div className='flex justify-end items-center pt-4 h-[56px] pr-14'>
+            <div className='flex justify-center items-center pt-4 h-[56px]'>
               <Show when='signed-out'>
                 <div className='flex gap-2 items-center'>
                   <SignInButton mode='modal'>

@@ -86,6 +86,17 @@ export const translations = {
     languageLabel: 'Language',
     goHome: 'Go to home',
 
+    // Feedback
+    feedbackTitle: 'Send Feedback',
+    feedbackTypeLabel: 'Type',
+    feedbackMessageLabel: 'Message',
+    feedbackMessagePlaceholder: 'Describe the issue or idea...',
+    feedbackSend: 'Send',
+    feedbackSuccess: 'Feedback sent, thank you!',
+    feedbackError: 'Failed to send feedback. Please try again.',
+    feedbackAriaLabel: 'Send feedback',
+    feedbackTypes: { Bug: 'Bug', 'Feature Request': 'Feature Request', Other: 'Other' },
+
     // Auth
     signIn: 'Sign in',
     signUp: 'Sign up',
@@ -208,6 +219,17 @@ export const translations = {
     settingsTitle: 'Ustawienia',
     languageLabel: 'Język',
     goHome: 'Wróć do strony głównej',
+
+    // Feedback
+    feedbackTitle: 'Wyślij opinię',
+    feedbackTypeLabel: 'Typ',
+    feedbackMessageLabel: 'Wiadomość',
+    feedbackMessagePlaceholder: 'Opisz problem lub pomysł...',
+    feedbackSend: 'Wyślij',
+    feedbackSuccess: 'Opinia wysłana, dziękujemy!',
+    feedbackError: 'Nie udało się wysłać. Spróbuj ponownie.',
+    feedbackAriaLabel: 'Wyślij opinię',
+    feedbackTypes: { Bug: 'Bug', 'Feature Request': 'Propozycja ficzera', Other: 'Inne' },
 
     // Auth
     signIn: 'Zaloguj',

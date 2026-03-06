@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Home } from 'lucide-react';
 import { LanguageProvider } from '@/i18n/LanguageContext';
 import { SettingsButton } from './SettingsButton';
+import { FeedbackButton } from './FeedbackButton';
 import { useT } from '@/i18n/LanguageContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -43,6 +44,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <LanguageProvider>
         {children}
         <HomeButton />
+        <FeedbackButton />
         <SettingsButton />
       </LanguageProvider>
       {process.env.NODE_ENV === 'development' && <ReactQueryDevtools />}
