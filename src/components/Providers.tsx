@@ -9,6 +9,12 @@ import { FeedbackButton } from './FeedbackButton';
 import { useT } from '@/i18n/LanguageContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { useVersionCheck } from '@/hooks/useVersionCheck';
+
+function VersionCheck() {
+  useVersionCheck();
+  return null;
+}
 
 function HomeButton() {
   const pathname = usePathname();
@@ -42,6 +48,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
+        <VersionCheck />
         {children}
         <HomeButton />
         <FeedbackButton />
