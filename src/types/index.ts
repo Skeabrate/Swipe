@@ -1,4 +1,4 @@
-export type Phase = 'lobby' | 'submitting' | 'voting' | 'tiebreaker' | 'results';
+export type Phase = 'lobby' | 'submitting' | 'voting' | 'tiebreaker' | 'wheel' | 'results';
 
 export interface Room {
   id: string;
@@ -9,6 +9,7 @@ export interface Room {
   max_suggestions: number;
   anonymous: boolean;
   created_at: string;
+  wheel_winner_id?: string | null;
 }
 
 export interface Participant {

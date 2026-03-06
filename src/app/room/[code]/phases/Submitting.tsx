@@ -26,6 +26,7 @@ export function Submitting() {
   const [adding, setAdding] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [forceStarting, setForceStarting] = useState(false);
+  const [spinStarting, setSpinStarting] = useState(false);
   const [savedIdeas, setSavedIdeas] = useState<SavedIdea[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -116,6 +117,20 @@ export function Submitting() {
       toast.error(err.error ?? 'Failed');
     }
     setForceStarting(false);
+  };
+
+  const spinWheel = async () => {
+    setSpinStarting(true);
+    const res = await fetch(`/api/rooms/${room.code}/phase`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.token}` },
+      body: JSON.stringify({ phase: 'wheel' }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      toast.error(err.error ?? 'Failed');
+    }
+    setSpinStarting(false);
   };
 
   return (
@@ -273,6 +288,16 @@ export function Submitting() {
           >
             {t.forceStartBtn}
           </button>
+        )}
+
+        {isHost && (
+          <Button
+            onClick={spinWheel}
+            disabled={spinStarting}
+            className="w-full h-12 text-base font-bold rounded-2xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300"
+          >
+            🎡 {t.spinWheel}
+          </Button>
         )}
       </div>
     </div>

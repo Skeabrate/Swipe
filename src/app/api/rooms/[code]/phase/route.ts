@@ -31,6 +31,22 @@ export async function POST(
       .eq('room_id', room.id);
     if ((count ?? 0) === 0) return NextResponse.json({ error: 'Need at least one suggestion to start voting' }, { status: 400 });
     await db.from('rooms').update({ phase: 'voting' }).eq('id', room.id);
+  } else if (phase === 'wheel') {
+    // Spin the wheel — pick a random suggestion
+    if (room.phase !== 'submitting') return NextResponse.json({ error: 'Invalid transition' }, { status: 400 });
+    const { data: suggestionsList } = await db
+      .from('suggestions')
+      .select('id')
+      .eq('room_id', room.id);
+    if (!suggestionsList || suggestionsList.length === 0)
+      return NextResponse.json({ error: 'Need at least one suggestion' }, { status: 400 });
+    const winner = suggestionsList[Math.floor(Math.random() * suggestionsList.length)];
+    await db.from('rooms').update({ phase: 'wheel', wheel_winner_id: winner.id }).eq('id', room.id);
+  } else if (phase === 'results') {
+    // Allow transition from both voting/tiebreaker and wheel
+    if (room.phase !== 'voting' && room.phase !== 'tiebreaker' && room.phase !== 'wheel')
+      return NextResponse.json({ error: 'Invalid transition' }, { status: 400 });
+    await db.from('rooms').update({ phase: 'results' }).eq('id', room.id);
   } else {
     return NextResponse.json({ error: 'Invalid phase' }, { status: 400 });
   }

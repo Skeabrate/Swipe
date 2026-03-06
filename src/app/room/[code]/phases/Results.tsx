@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, ThumbsUp, ThumbsDown, Minus } from 'lucide-react';
+import { Trophy, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRoom } from '../RoomContext';
 import { SuggestionScore } from '@/types';
@@ -15,8 +15,18 @@ export function Results() {
   const { t } = useT();
   const confettiFired = useRef(false);
 
+  // Wheel mode — skip vote-based scoring
+  const isWheelMode = !!room.wheel_winner_id;
+
+  const wheelWinner = useMemo((): SuggestionScore | null => {
+    if (!room.wheel_winner_id) return null;
+    const s = suggestions.find(s => s.id === room.wheel_winner_id);
+    return s ? { suggestion: s, likes: 0 } : null;
+  }, [room.wheel_winner_id, suggestions]);
+
   // Build scores
   const scores: SuggestionScore[] = useMemo(() => {
+    if (isWheelMode) return suggestions.map(s => ({ suggestion: s, likes: 0 }));
     const map: Record<string, number> = {};
     for (const s of suggestions) map[s.id] = 0;
     for (const v of votes) {
@@ -28,10 +38,11 @@ export function Results() {
     return suggestions
       .map(s => ({ suggestion: s, likes: map[s.id] ?? 0 }))
       .sort((a, b) => b.likes - a.likes);
-  }, [suggestions, votes, tiebreakerPicks]);
+  }, [suggestions, votes, tiebreakerPicks, isWheelMode]);
 
   // Determine winner
   const winner = useMemo((): SuggestionScore | null => {
+    if (isWheelMode) return wheelWinner;
     if (scores.length === 0) return null;
 
     const maxScore = scores[0].likes;
@@ -58,7 +69,7 @@ export function Results() {
     // No tiebreaker data – random deterministic
     const idx = room.id.charCodeAt(0) % topTied.length;
     return topTied[idx];
-  }, [scores, tiebreakerPicks, room.id]);
+  }, [scores, tiebreakerPicks, room.id, isWheelMode, wheelWinner]);
 
   useEffect(() => {
     if (winner && !confettiFired.current) {
@@ -89,14 +100,18 @@ export function Results() {
           </div>
 
           <div className="relative rounded-3xl bg-gradient-to-br from-violet-600 to-purple-800 p-8 shadow-2xl shadow-violet-500/30">
-            <div className="absolute -top-3 -right-3 text-3xl">🏆</div>
+            <div className="absolute -top-3 -right-3 text-3xl">{isWheelMode ? '🎡' : '🏆'}</div>
             <p className="text-white font-black text-4xl leading-tight">{winner.suggestion.title}</p>
             {!room.anonymous && winner.suggestion.participant && (
               <p className="text-white/50 mt-3 text-sm">{t.byAuthor(winner.suggestion.participant.name)}</p>
             )}
-            <p className="text-white/60 mt-4 text-sm">
-              {t.likesOutOf(winner.likes, totalVoters)}
-            </p>
+            {isWheelMode ? (
+              <p className="text-white/60 mt-4 text-sm">{t.chosenByWheel} 🎡</p>
+            ) : (
+              <p className="text-white/60 mt-4 text-sm">
+                {t.likesOutOf(winner.likes, totalVoters)}
+              </p>
+            )}
           </div>
         </motion.div>
       )}
@@ -126,14 +141,16 @@ export function Results() {
                 >
                   <span className="text-white/30 text-sm w-5 text-right flex-shrink-0">{i + 1}</span>
                   <span className="flex-1 text-white text-sm font-medium">{suggestion.title}</span>
-                  <div className="flex items-center gap-3 text-xs flex-shrink-0">
-                    <span className="text-green-400 flex items-center gap-1">
-                      <ThumbsUp size={12} /> {likes}
-                    </span>
-                    <span className="text-red-400 flex items-center gap-1">
-                      <ThumbsDown size={12} /> {dislikes}
-                    </span>
-                  </div>
+                  {!isWheelMode && (
+                    <div className="flex items-center gap-3 text-xs flex-shrink-0">
+                      <span className="text-green-400 flex items-center gap-1">
+                        <ThumbsUp size={12} /> {likes}
+                      </span>
+                      <span className="text-red-400 flex items-center gap-1">
+                        <ThumbsDown size={12} /> {dislikes}
+                      </span>
+                    </div>
+                  )}
                 </motion.div>
               );
             })}

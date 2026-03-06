@@ -46,6 +46,13 @@ export const translations = {
     forceStartBtn: 'Force start voting now (host)',
     cantStartNoSuggestions: "Can't start — no suggestions yet!",
     savedIdeas: 'Your saved ideas',
+    spinWheel: 'Spin the wheel',
+
+    // Wheel
+    wheelSpinning: 'Spinning...',
+    wheelRevealResults: 'Reveal Results',
+    wheelWaitingReveal: 'Waiting for host to reveal...',
+    chosenByWheel: 'Chosen by the wheel',
 
     // Voting
     youAreDoneVoting: "You're done!",
@@ -155,6 +162,13 @@ export const translations = {
     forceStartBtn: 'Wymuś start głosowania (host)',
     cantStartNoSuggestions: 'Nie można zacząć — brak propozycji!',
     savedIdeas: 'Twoje pomysły',
+    spinWheel: 'Zakręć kołem fortuny',
+
+    // Wheel
+    wheelSpinning: 'Kręci się...',
+    wheelRevealResults: 'Pokaż wyniki',
+    wheelWaitingReveal: 'Czekanie na hosta...',
+    chosenByWheel: 'Wybrano przez koło fortuny',
 
     // Voting
     youAreDoneVoting: 'Gotowe!',

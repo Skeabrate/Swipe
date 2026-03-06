@@ -5,10 +5,11 @@ import { Lobby } from './phases/Lobby';
 import { Submitting } from './phases/Submitting';
 import { Voting } from './phases/Voting';
 import { Tiebreaker } from './phases/Tiebreaker';
+import { Wheel } from './phases/Wheel';
 import { Results } from './phases/Results';
 import { AnimatePresence, motion } from 'framer-motion';
 
-const phaseOrder = ['lobby', 'submitting', 'voting', 'tiebreaker', 'results'];
+const phaseOrder = ['lobby', 'submitting', 'voting', 'tiebreaker', 'wheel', 'results'];
 
 export function RoomShell() {
   const { room } = useRoom();
@@ -27,6 +28,7 @@ export function RoomShell() {
         {room.phase === 'submitting' && <Submitting />}
         {room.phase === 'voting' && <Voting />}
         {room.phase === 'tiebreaker' && <Tiebreaker />}
+        {room.phase === 'wheel' && <Wheel />}
         {room.phase === 'results' && <Results />}
       </motion.div>
     </AnimatePresence>

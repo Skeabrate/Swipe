@@ -44,6 +44,13 @@ export async function GET() {
       const suggestionList = suggestions ?? [];
       const voteList = votes ?? [];
 
+      // Wheel mode — winner is predetermined, scores are irrelevant
+      if (room.wheel_winner_id) {
+        const scored = suggestionList.map(s => ({ ...s, score: 0 }));
+        const winner = scored.find(s => s.id === room.wheel_winner_id) ?? null;
+        return { ...room, suggestions: scored, winner };
+      }
+
       // Score each suggestion
       const scored = suggestionList.map(s => ({
         ...s,
