@@ -69,6 +69,7 @@ export const translations = {
     // Settings
     settingsTitle: 'Settings',
     languageLabel: 'Language',
+    goHome: 'Go to home',
 
     // Dynamic
     addedCount: (n: number, max: number) => `${n}/${max} added`,
@@ -144,6 +145,7 @@ export const translations = {
     // Settings
     settingsTitle: 'Ustawienia',
     languageLabel: 'Język',
+    goHome: 'Wróć do strony głównej',
 
     // Dynamic
     addedCount: (n: number, max: number) => `${n}/${max} dodanych`,

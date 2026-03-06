@@ -43,7 +43,7 @@ export function Tiebreaker() {
   };
 
   return (
-    <div className="flex flex-col h-full px-6 pt-10 pb-8 gap-6">
+    <div className="flex flex-col h-full px-6 pt-16 pb-8 gap-6">
       <div className="text-center">
         <motion.div
           initial={{ scale: 0 }}

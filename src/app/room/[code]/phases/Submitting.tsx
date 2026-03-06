@@ -82,7 +82,7 @@ export function Submitting() {
   };
 
   return (
-    <div className="flex flex-col h-full px-6 pt-10 pb-8 gap-6">
+    <div className="flex flex-col h-full px-6 pt-16 pb-8 gap-6">
       {/* Header */}
       <div>
         <p className="text-white/50 text-xs uppercase tracking-widest mb-1">{room.topic}</p>

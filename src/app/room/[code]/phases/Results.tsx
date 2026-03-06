@@ -74,7 +74,7 @@ export function Results() {
   const totalVoters = participants.length;
 
   return (
-    <div className="flex flex-col h-full px-6 pt-10 pb-8 gap-6 overflow-auto">
+    <div className="flex flex-col h-full px-6 pt-16 pb-8 gap-6 overflow-auto">
       {/* Winner */}
       {winner && (
         <motion.div

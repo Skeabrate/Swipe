@@ -96,7 +96,7 @@ export function Voting() {
   return (
     <div className="flex flex-col h-full">
       {/* Progress bar */}
-      <div className="px-6 pt-10 pb-4 flex-shrink-0">
+      <div className="px-6 pt-16 pb-4 flex-shrink-0">
         <div className="flex justify-between items-center mb-2">
           <p className="text-white/50 text-xs uppercase tracking-widest">{room.topic}</p>
           <p className="text-white/50 text-xs">{myVotes.length} / {shuffledSuggestions.length}</p>

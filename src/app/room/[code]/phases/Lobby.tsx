@@ -41,7 +41,7 @@ export function Lobby() {
   };
 
   return (
-    <div className="flex flex-col h-full px-6 pt-12 pb-8 gap-8">
+    <div className="flex flex-col h-full px-6 pt-16 pb-8 gap-8">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
