@@ -1,17 +1,18 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { SwipeCard, SwipeActionButtons } from '@/components/SwipeCard';
 import { useRoom } from '../RoomContext';
 import { toast } from 'sonner';
 import { useT } from '@/i18n/LanguageContext';
+import { useMutation } from '@tanstack/react-query';
+import * as api from '@/lib/api';
 
 export function Voting() {
-  const { room, participants, suggestions, myVotes, session } = useRoom();
+  const { room, participants, suggestions, myVotes, session, votes } = useRoom();
   const { t } = useT();
-  const [pending, setPending] = useState(false);
 
   // Shuffle suggestions once (stable across renders)
   const shuffledSuggestions = useMemo(() => {
@@ -27,31 +28,21 @@ export function Voting() {
   const votedIds = new Set(myVotes.map(v => v.suggestion_id));
   const remaining = shuffledSuggestions.filter(s => !votedIds.has(s.id));
   const totalVoters = participants.length;
-  const votedOnCurrentCard = remaining.length > 0 ? votedIds.has(remaining[0].id) : false;
 
   const progress = myVotes.length / shuffledSuggestions.length;
 
-  const submitVote = useCallback(async (suggestionId: string, liked: boolean) => {
-    setPending(true);
-    const res = await fetch(`/api/rooms/${room.code}/votes`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.token}` },
-      body: JSON.stringify({ suggestionId, liked }),
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      toast.error(err.error ?? 'Vote failed');
-    }
-    setPending(false);
-  }, [room.code, session.token]);
+  const submitVoteMutation = useMutation({
+    mutationFn: ({ suggestionId, liked }: { suggestionId: string; liked: boolean }) =>
+      api.submitVote(room.code, suggestionId, liked, session.token),
+    onError: (err) => toast.error(err instanceof Error ? err.message : 'Vote failed'),
+  });
 
   const handleSwipe = useCallback((liked: boolean) => {
     if (remaining.length === 0) return;
-    submitVote(remaining[0].id, liked);
-  }, [remaining, submitVote]);
+    submitVoteMutation.mutate({ suggestionId: remaining[0].id, liked });
+  }, [remaining, submitVoteMutation]);
 
   // Count unique voters who've cast at least one vote
-  const { votes } = useRoom();
   const votersDone = new Set(
     votes
       .filter(v => {
@@ -125,7 +116,7 @@ export function Voting() {
           ))}
         </AnimatePresence>
 
-        {pending && (
+        {submitVoteMutation.isPending && (
           <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
             <Loader2 size={24} className="text-white/30 animate-spin" />
           </div>
@@ -138,7 +129,7 @@ export function Voting() {
         <SwipeActionButtons
           onDislike={() => handleSwipe(false)}
           onLike={() => handleSwipe(true)}
-          disabled={pending}
+          disabled={submitVoteMutation.isPending}
         />
       </div>
     </div>

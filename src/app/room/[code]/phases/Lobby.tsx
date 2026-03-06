@@ -10,14 +10,14 @@ import { useRoom } from "../RoomContext";
 import { toast } from "sonner";
 import { useT } from "@/i18n/LanguageContext";
 import { SavedIdeasPicker } from "@/components/SavedIdeasPicker";
+import { useMutation } from "@tanstack/react-query";
+import * as api from "@/lib/api";
 
 export function Lobby() {
   const { room, participants, suggestions, session, isHost } = useRoom();
   const { t } = useT();
   const [copied, setCopied] = useState(false);
-  const [starting, setStarting] = useState(false);
   const [newIdea, setNewIdea] = useState("");
-  const [adding, setAdding] = useState(false);
 
   const inviteUrl = typeof window !== "undefined" ? `${window.location.origin}/room/${room.code}` : "";
 
@@ -30,46 +30,21 @@ export function Lobby() {
 
   const isPredefined = room.ideas_mode === "predefined";
 
-  const addIdea = async (title: string) => {
-    const trimmed = title.trim();
-    if (!trimmed) return;
-    setAdding(true);
-    const res = await fetch(`/api/rooms/${room.code}/suggestions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.token}` },
-      body: JSON.stringify({ title: trimmed }),
-    });
-    if (res.ok) {
-      setNewIdea("");
-    } else {
-      const err = await res.json();
-      toast.error(err.error ?? "Failed to add");
-    }
-    setAdding(false);
-  };
+  const addIdeaMutation = useMutation({
+    mutationFn: (title: string) => api.addRoomSuggestion(room.code, title, session.token),
+    onSuccess: () => setNewIdea(""),
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to add"),
+  });
 
-  const removeIdea = async (id: string) => {
-    await fetch(`/api/rooms/${room.code}/suggestions`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.token}` },
-      body: JSON.stringify({ suggestionId: id }),
-    });
-  };
+  const removeIdeaMutation = useMutation({
+    mutationFn: (id: string) => api.deleteRoomSuggestion(room.code, id, session.token),
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to remove"),
+  });
 
-  const startRoom = async () => {
-    setStarting(true);
-    const targetPhase = isPredefined ? "voting" : "submitting";
-    const res = await fetch(`/api/rooms/${room.code}/phase`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.token}` },
-      body: JSON.stringify({ phase: targetPhase }),
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      toast.error(err.error ?? "Failed to start");
-    }
-    setStarting(false);
-  };
+  const startRoomMutation = useMutation({
+    mutationFn: (phase: string) => api.advancePhase(room.code, phase, session.token),
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to start"),
+  });
 
   return (
     <div className='flex flex-col h-full px-6 pt-16 pb-8 gap-8'>
@@ -164,7 +139,7 @@ export function Lobby() {
                   <span className='flex-1 text-white/80 text-sm'>{s.title}</span>
                   {isHost && (
                     <button
-                      onClick={() => removeIdea(s.id)}
+                      onClick={() => removeIdeaMutation.mutate(s.id)}
                       className='text-white/25 hover:text-red-400 transition-colors p-1 flex-shrink-0'
                     >
                       <Trash2 size={14} />
@@ -184,14 +159,14 @@ export function Lobby() {
                 <Input
                   value={newIdea}
                   onChange={(e) => setNewIdea(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && addIdea(newIdea)}
+                  onKeyDown={(e) => e.key === "Enter" && newIdea.trim() && addIdeaMutation.mutate(newIdea.trim())}
                   placeholder={t.predefinedIdeaPlaceholder}
                   className='bg-white/10 border-white/20 text-white placeholder:text-white/30 rounded-xl flex-1'
                   maxLength={60}
                 />
                 <button
-                  onClick={() => addIdea(newIdea)}
-                  disabled={adding || !newIdea.trim()}
+                  onClick={() => newIdea.trim() && addIdeaMutation.mutate(newIdea.trim())}
+                  disabled={addIdeaMutation.isPending || !newIdea.trim()}
                   className='bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white rounded-xl px-3 transition-colors'
                 >
                   <Plus size={18} />
@@ -199,7 +174,7 @@ export function Lobby() {
               </div>
               <SavedIdeasPicker
                 usedTitles={suggestions.map((s) => s.title)}
-                onSelect={(title) => addIdea(title)}
+                onSelect={(title) => addIdeaMutation.mutate(title)}
                 label={t.savedIdeas}
               />
             </>
@@ -234,11 +209,11 @@ export function Lobby() {
 
         {isHost ? (
           <Button
-            onClick={startRoom}
-            disabled={starting || participants.length < 1}
+            onClick={() => startRoomMutation.mutate(isPredefined ? "voting" : "submitting")}
+            disabled={startRoomMutation.isPending || participants.length < 1}
             className='w-full h-14 text-base font-bold rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0 text-white'
           >
-            {starting ? (
+            {startRoomMutation.isPending ? (
               t.startingLabel
             ) : (
               <span className='flex items-center gap-2'>

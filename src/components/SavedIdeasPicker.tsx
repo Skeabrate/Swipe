@@ -1,14 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useUser } from '@clerk/nextjs';
-
-interface SavedIdea {
-  id: string;
-  title: string;
-  category_id: string | null;
-  user_categories: { id: string; name: string; color: string } | null;
-}
+import { useQuery } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/queryKeys';
+import * as api from '@/lib/api';
 
 interface Props {
   usedTitles: string[];
@@ -18,15 +14,13 @@ interface Props {
 
 export function SavedIdeasPicker({ usedTitles, onSelect, label }: Props) {
   const { user } = useUser();
-  const [savedIdeas, setSavedIdeas] = useState<SavedIdea[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!user) return;
-    fetch('/api/user/ideas')
-      .then(r => r.ok ? r.json() : [])
-      .then(data => setSavedIdeas(data ?? []));
-  }, [user]);
+  const { data: savedIdeas = [] } = useQuery({
+    queryKey: queryKeys.userIdeas(),
+    queryFn: api.fetchUserIdeas,
+    enabled: !!user,
+  });
 
   const unused = savedIdeas.filter(i => !usedTitles.includes(i.title));
 

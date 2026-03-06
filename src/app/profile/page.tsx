@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser, UserButton } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { Plus, Trash2, Check, Pencil, X, GripVertical, Loader2 } from 'lucide-react';
@@ -9,6 +9,10 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { useT } from '@/i18n/LanguageContext';
 import { PageHeader } from '@/components/PageHeader';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/queryKeys';
+import * as api from '@/lib/api';
+import type { Category, Idea } from '@/lib/api';
 import {
   DndContext,
   DragEndEvent,
@@ -146,138 +150,145 @@ function DroppableCategory({
   );
 }
 
-interface Category {
-  id: string;
-  name: string;
-  color: string;
-}
-
-interface Idea {
-  id: string;
-  title: string;
-  category_id: string | null;
-  source_room_code: string | null;
-  created_at: string;
-  user_categories: { id: string; name: string; color: string } | null;
-}
-
-interface UserProfile {
-  username: string | null;
-  primary_color: string;
-}
-
 export default function ProfilePage() {
   const { isSignedIn, isLoaded, user } = useUser();
   const router = useRouter();
   const { t } = useT();
+  const queryClient = useQueryClient();
 
-  const [profile, setProfile] = useState<UserProfile>({ username: null, primary_color: '#7c3aed' });
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [ideas, setIdeas] = useState<Idea[]>([]);
-  const [loading, setLoading] = useState(true);
-
+  // UI-only state
   const [editingUsername, setEditingUsername] = useState(false);
   const [usernameInput, setUsernameInput] = useState('');
-  const [savingProfile, setSavingProfile] = useState(false);
-
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryColor, setNewCategoryColor] = useState('#7c3aed');
   const [addingCategory, setAddingCategory] = useState(false);
-
   const [addingIdeaFor, setAddingIdeaFor] = useState<string | null>(null);
   const [newIdeaTitle, setNewIdeaTitle] = useState('');
-
   const [activeIdea, setActiveIdea] = useState<Idea | null>(null);
   const [deletingCategory, setDeletingCategory] = useState<{ cat: Category; count: number } | null>(null);
   const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
-  const [deletingCategoryLoading, setDeletingCategoryLoading] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
   );
 
-  const fetchAll = useCallback(async () => {
-    const [profileRes, catRes, ideaRes] = await Promise.all([
-      fetch('/api/user/profile'),
-      fetch('/api/user/categories'),
-      fetch('/api/user/ideas'),
-    ]);
-    const [profileData, catData, ideaData] = await Promise.all([
-      profileRes.json(),
-      catRes.json(),
-      ideaRes.json(),
-    ]);
-    setProfile(profileData);
-    setUsernameInput(profileData.username ?? '');
-    setCategories(catData);
-    setIdeas(ideaData);
-    setLoading(false);
-  }, []);
+  const profileQuery = useQuery({
+    queryKey: queryKeys.userProfile(),
+    queryFn: api.fetchUserProfile,
+    enabled: !!isSignedIn,
+  });
+  const categoriesQuery = useQuery({
+    queryKey: queryKeys.userCategories(),
+    queryFn: api.fetchCategories,
+    enabled: !!isSignedIn,
+  });
+  const ideasQuery = useQuery({
+    queryKey: queryKeys.userIdeas(),
+    queryFn: api.fetchUserIdeas,
+    enabled: !!isSignedIn,
+  });
+
+  const isLoading = profileQuery.isLoading || categoriesQuery.isLoading || ideasQuery.isLoading;
+
+  // Sync username input when profile data loads
+  useEffect(() => {
+    if (profileQuery.data && !editingUsername) {
+      setUsernameInput(profileQuery.data.username ?? '');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileQuery.data?.username]);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) router.replace('/');
-    if (isSignedIn) fetchAll();
-  }, [isLoaded, isSignedIn, router, fetchAll]);
+  }, [isLoaded, isSignedIn, router]);
 
-  const saveProfile = async (updates: Partial<UserProfile>) => {
-    setSavingProfile(true);
-    const res = await fetch('/api/user/profile', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...profile, ...updates }),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      setProfile(data);
+  const saveProfileMutation = useMutation({
+    mutationFn: (updates: Partial<api.UserProfile>) =>
+      api.updateUserProfile({ ...profileQuery.data!, ...updates }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.userProfile() });
       toast.success(t.profileSaved);
-    } else {
-      toast.error('Failed to save profile');
-    }
-    setSavingProfile(false);
-    setEditingUsername(false);
-  };
+      setEditingUsername(false);
+    },
+    onError: () => toast.error('Failed to save profile'),
+  });
 
-  const addCategory = async () => {
-    if (!newCategoryName.trim()) return;
-    const res = await fetch('/api/user/categories', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newCategoryName.trim(), color: newCategoryColor }),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      setCategories(prev => [...prev, data]);
+  const addCategoryMutation = useMutation({
+    mutationFn: () => api.createCategory(newCategoryName.trim(), newCategoryColor),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.userCategories() });
       setNewCategoryName('');
       setAddingCategory(false);
-    } else {
-      toast.error('Failed to create category');
-    }
-  };
+    },
+    onError: () => toast.error('Failed to create category'),
+  });
+
+  const deleteCategoryMutation = useMutation({
+    mutationFn: (catId: string) => api.deleteCategory(catId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.userCategories() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.userIdeas() });
+      setDeletingCategory(null);
+      setDeleteStep(1);
+    },
+    onError: () => toast.error('Failed to delete category'),
+  });
+
+  const addIdeaMutation = useMutation({
+    mutationFn: ({ title, categoryId }: { title: string; categoryId: string }) =>
+      api.createUserIdea(title, categoryId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.userIdeas() });
+      setNewIdeaTitle('');
+      setAddingIdeaFor(null);
+    },
+    onError: () => toast.error('Failed to save idea'),
+  });
+
+  const deleteIdeaMutation = useMutation({
+    mutationFn: (id: string) => api.deleteUserIdea(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.userIdeas() }),
+    onError: () => toast.error('Failed to delete idea'),
+  });
+
+  const moveIdeaMutation = useMutation({
+    mutationFn: ({ id, categoryId }: { id: string; categoryId: string }) =>
+      api.moveUserIdea(id, categoryId),
+    onMutate: async ({ id, categoryId }) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.userIdeas() });
+      const snapshot = queryClient.getQueryData<Idea[]>(queryKeys.userIdeas());
+      const categories = categoriesQuery.data ?? [];
+      const targetCat = categories.find(c => c.id === categoryId);
+      queryClient.setQueryData<Idea[]>(queryKeys.userIdeas(), old =>
+        (old ?? []).map(i =>
+          i.id === id
+            ? { ...i, category_id: categoryId, user_categories: targetCat ?? i.user_categories }
+            : i
+        )
+      );
+      return { snapshot };
+    },
+    onError: (_, __, context) => {
+      if (context?.snapshot) queryClient.setQueryData(queryKeys.userIdeas(), context.snapshot);
+      toast.error('Failed to move idea');
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: queryKeys.userIdeas() }),
+  });
 
   const requestDeleteCategory = (cat: Category, count: number) => {
     setDeletingCategory({ cat, count });
     setDeleteStep(1);
   };
 
-  const confirmDeleteCategory = async () => {
+  const confirmDeleteCategory = () => {
     if (!deletingCategory) return;
     if (deleteStep === 1) { setDeleteStep(2); return; }
-    const { cat } = deletingCategory;
-    setDeletingCategoryLoading(true);
-    const res = await fetch(`/api/user/categories/${cat.id}`, { method: 'DELETE' });
-    if (res.ok) {
-      setCategories(prev => prev.filter(c => c.id !== cat.id));
-      setIdeas(prev => prev.filter(i => i.category_id !== cat.id));
-    } else {
-      toast.error('Failed to delete category');
-    }
-    setDeletingCategoryLoading(false);
-    setDeletingCategory(null);
-    setDeleteStep(1);
+    deleteCategoryMutation.mutate(deletingCategory.cat.id);
   };
 
   const handleDragStart = ({ active }: DragStartEvent) => {
+    const ideas = ideasQuery.data ?? [];
     setActiveIdea(ideas.find(i => i.id === active.id) ?? null);
   };
 
@@ -285,10 +296,11 @@ export default function ProfilePage() {
     setActiveIdea(null);
     if (!over) return;
 
+    const ideas = ideasQuery.data ?? [];
+    const categories = categoriesQuery.data ?? [];
     const draggedIdea = ideas.find(i => i.id === active.id);
     if (!draggedIdea) return;
 
-    // over.id is either an idea id or a category id
     const overIdea = ideas.find(i => i.id === over.id);
     const targetCatId = overIdea ? overIdea.category_id : (over.id as string);
 
@@ -297,7 +309,8 @@ export default function ProfilePage() {
     if (draggedIdea.category_id === targetCatId) {
       // Reorder within same category (local only)
       if (overIdea && active.id !== over.id) {
-        setIdeas(prev => {
+        queryClient.setQueryData<Idea[]>(queryKeys.userIdeas(), prev => {
+          if (!prev) return prev;
           const catIdeas = prev.filter(i => i.category_id === targetCatId);
           const others = prev.filter(i => i.category_id !== targetCatId);
           const oldIdx = catIdeas.findIndex(i => i.id === active.id);
@@ -306,55 +319,12 @@ export default function ProfilePage() {
         });
       }
     } else {
-      // Move to different category — optimistic update + API call
-      const targetCat = categories.find(c => c.id === targetCatId)!;
-      setIdeas(prev =>
-        prev.map(i =>
-          i.id === active.id
-            ? { ...i, category_id: targetCatId, user_categories: { id: targetCat.id, name: targetCat.name, color: targetCat.color } }
-            : i
-        )
-      );
-      fetch(`/api/user/ideas/${active.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category_id: targetCatId }),
-      }).catch(() => {
-        toast.error('Failed to move idea');
-        setIdeas(prev => prev.map(i => i.id === active.id ? draggedIdea : i));
-      });
+      // Move to different category — optimistic update via mutation
+      moveIdeaMutation.mutate({ id: active.id as string, categoryId: targetCatId });
     }
   };
 
-  const addIdea = async (categoryId: string) => {
-    if (!newIdeaTitle.trim()) return;
-    const res = await fetch('/api/user/ideas', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: newIdeaTitle.trim(), category_id: categoryId }),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      const cat = categories.find(c => c.id === categoryId) ?? null;
-      setIdeas(prev => [...prev, { ...data, user_categories: cat }]);
-      setNewIdeaTitle('');
-      setAddingIdeaFor(null);
-    } else {
-      toast.error('Failed to save idea');
-    }
-  };
-
-
-  const deleteIdea = async (id: string) => {
-    const res = await fetch(`/api/user/ideas/${id}`, { method: 'DELETE' });
-    if (res.ok) {
-      setIdeas(prev => prev.filter(i => i.id !== id));
-    } else {
-      toast.error('Failed to delete idea');
-    }
-  };
-
-  if (!isLoaded || loading) {
+  if (!isLoaded || isLoading) {
     return (
       <div className="h-dvh bg-[#0a0a0f] flex items-center justify-center">
         <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
@@ -362,7 +332,10 @@ export default function ProfilePage() {
     );
   }
 
-  const displayName = profile.username || [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.username || 'User';
+  const profile = profileQuery.data;
+  const categories = categoriesQuery.data ?? [];
+  const ideas = ideasQuery.data ?? [];
+  const displayName = profile?.username || [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.username || 'User';
 
   return (
     <main className="min-h-dvh bg-[#0a0a0f] text-white pb-16">
@@ -380,12 +353,18 @@ export default function ProfilePage() {
                   <Input
                     value={usernameInput}
                     onChange={e => setUsernameInput(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter') saveProfile({ username: usernameInput || null }); if (e.key === 'Escape') setEditingUsername(false); }}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') saveProfileMutation.mutate({ username: usernameInput || null });
+                      if (e.key === 'Escape') setEditingUsername(false);
+                    }}
                     className="bg-white/10 border-white/20 text-white h-9 rounded-lg text-sm"
                     maxLength={30}
                     autoFocus
                   />
-                  <button onClick={() => saveProfile({ username: usernameInput || null })} className="text-violet-400 hover:text-violet-300">
+                  <button
+                    onClick={() => saveProfileMutation.mutate({ username: usernameInput || null })}
+                    className="text-violet-400 hover:text-violet-300"
+                  >
                     <Check size={18} />
                   </button>
                   <button onClick={() => setEditingUsername(false)} className="text-white/40 hover:text-white/70">
@@ -404,7 +383,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {savingProfile && <p className="text-white/40 text-xs">{t.saving}</p>}
+          {saveProfileMutation.isPending && <p className="text-white/40 text-xs">{t.saving}</p>}
         </div>
 
         {/* Ideas by category */}
@@ -437,12 +416,19 @@ export default function ProfilePage() {
               <Input
                 value={newCategoryName}
                 onChange={e => setNewCategoryName(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') addCategory(); if (e.key === 'Escape') setAddingCategory(false); }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') addCategoryMutation.mutate();
+                  if (e.key === 'Escape') setAddingCategory(false);
+                }}
                 placeholder={t.categoryNamePlaceholder}
                 className="bg-white/10 border-white/20 text-white placeholder:text-white/30 rounded-xl h-11"
                 autoFocus
               />
-              <Button onClick={addCategory} className="h-11 rounded-xl bg-violet-600 hover:bg-violet-500 border-0 px-4 flex-shrink-0">
+              <Button
+                onClick={() => addCategoryMutation.mutate()}
+                disabled={addCategoryMutation.isPending}
+                className="h-11 rounded-xl bg-violet-600 hover:bg-violet-500 border-0 px-4 flex-shrink-0"
+              >
                 <Check size={18} />
               </Button>
               <button onClick={() => setAddingCategory(false)} className="text-white/40 hover:text-white/70 px-1 flex-shrink-0">
@@ -466,8 +452,8 @@ export default function ProfilePage() {
                 newIdeaTitle={newIdeaTitle}
                 setNewIdeaTitle={setNewIdeaTitle}
                 setAddingIdeaFor={setAddingIdeaFor}
-                onAddIdea={addIdea}
-                onDeleteIdea={deleteIdea}
+                onAddIdea={(catId) => addIdeaMutation.mutate({ title: newIdeaTitle.trim(), categoryId: catId })}
+                onDeleteIdea={(id) => deleteIdeaMutation.mutate(id)}
                 onDeleteCategory={requestDeleteCategory}
                 t={t}
               />
@@ -504,17 +490,17 @@ export default function ProfilePage() {
             <div className="flex gap-3">
               <button
                 onClick={() => { setDeletingCategory(null); setDeleteStep(1); }}
-                disabled={deletingCategoryLoading}
+                disabled={deleteCategoryMutation.isPending}
                 className="flex-1 h-11 rounded-xl bg-white/10 hover:bg-white/15 text-white text-sm font-medium transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDeleteCategory}
-                disabled={deletingCategoryLoading}
+                disabled={deleteCategoryMutation.isPending}
                 className="flex-1 h-11 rounded-xl bg-red-600 hover:bg-red-500 text-white text-sm font-bold transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
               >
-                {deletingCategoryLoading
+                {deleteCategoryMutation.isPending
                   ? <Loader2 size={16} className="animate-spin" />
                   : deleteStep === 1 ? 'Continue' : 'Delete'}
               </button>

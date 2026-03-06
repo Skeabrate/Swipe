@@ -6,7 +6,8 @@
       "Bash(npm i:*)",
       "Bash(npm install:*)",
       "Bash(npm run:*)",
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
+      "Bash(wc:*)"
     ]
   }
 }

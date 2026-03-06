@@ -1,17 +1,17 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Loader2 } from "lucide-react";
 import { useRoom } from "../RoomContext";
 import { SuggestionScore } from "@/types";
 import { toast } from "sonner";
 import { useT } from "@/i18n/LanguageContext";
+import { useMutation } from "@tanstack/react-query";
+import * as api from "@/lib/api";
 
 export function Tiebreaker() {
   const { room, suggestions, votes, tiebreakerPicks, participants, session, myPick } = useRoom();
   const { t } = useT();
-  const [picking, setPicking] = useState(false);
 
   // Compute tied suggestions (highest score)
   const scoreMap: Record<string, number> = {};
@@ -27,20 +27,10 @@ export function Tiebreaker() {
   const pickedCount = tiebreakerPicks.length;
   const totalCount = participants.length;
 
-  const pick = async (suggestionId: string) => {
-    if (myPick) return;
-    setPicking(true);
-    const res = await fetch(`/api/rooms/${room.code}/tiebreaker`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.token}` },
-      body: JSON.stringify({ suggestionId }),
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      toast.error(err.error ?? "Failed");
-    }
-    setPicking(false);
-  };
+  const pickMutation = useMutation({
+    mutationFn: (suggestionId: string) => api.submitTiebreaker(room.code, suggestionId, session.token),
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Failed"),
+  });
 
   return (
     <div className='flex flex-col h-full px-6 pt-16 pb-8 gap-6'>
@@ -97,8 +87,8 @@ export function Tiebreaker() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.07 }}
-              onClick={() => pick(suggestion.id)}
-              disabled={!!myPick || picking}
+              onClick={() => !myPick && pickMutation.mutate(suggestion.id)}
+              disabled={!!myPick || pickMutation.isPending}
               className={`w-full rounded-3xl p-6 text-left transition-all relative overflow-hidden ${
                 isMyPick
                   ? "bg-gradient-to-br from-violet-600 to-purple-700 shadow-lg shadow-violet-500/30"
@@ -130,7 +120,7 @@ export function Tiebreaker() {
         <div className='text-center text-white/40 text-sm'>{t.waitingForMore(totalCount - pickedCount)}</div>
       )}
 
-      {picking && (
+      {pickMutation.isPending && (
         <Loader2
           size={20}
           className='text-white/40 animate-spin mx-auto'

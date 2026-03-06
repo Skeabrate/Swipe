@@ -1,84 +1,62 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Trophy, BookmarkPlus, Check } from "lucide-react";
 import { toast } from "sonner";
 import { useT } from "@/i18n/LanguageContext";
 import { PageHeader } from "@/components/PageHeader";
-
-interface Suggestion {
-  id: string;
-  title: string;
-  score: number;
-}
-
-interface RoomHistory {
-  id: string;
-  code: string;
-  topic: string;
-  phase: string;
-  created_at: string;
-  wheel_winner_id: string | null;
-  suggestions: Suggestion[];
-  winner: Suggestion | null;
-}
-
-interface Category {
-  id: string;
-  name: string;
-  color: string;
-}
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
+import * as api from "@/lib/api";
 
 export default function HistoryPage() {
   const { isSignedIn, isLoaded } = useUser();
   const router = useRouter();
   const { t } = useT();
+  const queryClient = useQueryClient();
 
-  const [rooms, setRooms] = useState<RoomHistory[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [savingIdea, setSavingIdea] = useState<string | null>(null);
   const [savedIdeas, setSavedIdeas] = useState<Set<string>>(new Set());
   const [pickerFor, setPickerFor] = useState<{ title: string; roomCode: string } | null>(null);
 
-  const fetchAll = useCallback(async () => {
-    const [roomsRes, catRes] = await Promise.all([fetch("/api/user/rooms"), fetch("/api/user/categories")]);
-    const [roomsData, catData] = await Promise.all([roomsRes.json(), catRes.json()]);
-    setRooms(Array.isArray(roomsData) ? roomsData : []);
-    setCategories(Array.isArray(catData) ? catData : []);
-    setLoading(false);
-  }, []);
+  const roomsQuery = useQuery({
+    queryKey: queryKeys.userRooms(),
+    queryFn: api.fetchUserRooms,
+    enabled: !!isSignedIn,
+  });
+  const categoriesQuery = useQuery({
+    queryKey: queryKeys.userCategories(),
+    queryFn: api.fetchCategories,
+    enabled: !!isSignedIn,
+  });
+
+  const saveIdeaMutation = useMutation({
+    mutationFn: ({ title, roomCode, categoryId }: { title: string; roomCode: string; categoryId: string | null }) =>
+      api.createUserIdea(title, categoryId, roomCode),
+    onSuccess: (_, { title, roomCode }) => {
+      const key = `${roomCode}:${title}`;
+      setSavedIdeas(prev => new Set(prev).add(key));
+      toast.success(t.ideaSaved(title));
+      setPickerFor(null);
+      queryClient.invalidateQueries({ queryKey: queryKeys.userIdeas() });
+    },
+    onError: () => toast.error("Failed to save idea"),
+  });
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) router.replace("/");
-    if (isSignedIn) fetchAll();
-  }, [isLoaded, isSignedIn, router, fetchAll]);
+  }, [isLoaded, isSignedIn, router]);
 
-  const saveIdea = async (title: string, roomCode: string, categoryId: string | null) => {
-    const key = `${roomCode}:${title}`;
-    setSavingIdea(key);
-    const res = await fetch("/api/user/ideas", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, source_room_code: roomCode, category_id: categoryId }),
-    });
-    setSavingIdea(null);
-    setPickerFor(null);
-    if (res.ok) {
-      setSavedIdeas((prev) => new Set(prev).add(key));
-      toast.success(t.ideaSaved(title));
-    } else {
-      toast.error("Failed to save idea");
-    }
-  };
+  const isLoading = roomsQuery.isLoading || categoriesQuery.isLoading;
+  const rooms = roomsQuery.data ?? [];
+  const categories = categoriesQuery.data ?? [];
 
   const formatDate = (iso: string) => {
     return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
   };
 
-  if (!isLoaded || loading) {
+  if (!isLoaded || isLoading) {
     return (
       <div className='h-dvh bg-[#0a0a0f] flex items-center justify-center'>
         <div className='w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin' />
@@ -150,7 +128,9 @@ export default function HistoryPage() {
                     {room.suggestions.map((s) => {
                       const key = `${room.code}:${s.title}`;
                       const saved = savedIdeas.has(key);
-                      const saving = savingIdea === key;
+                      const saving = saveIdeaMutation.isPending &&
+                        saveIdeaMutation.variables?.title === s.title &&
+                        saveIdeaMutation.variables?.roomCode === room.code;
                       return (
                         <li
                           key={s.id}
@@ -212,7 +192,7 @@ export default function HistoryPage() {
               {categories.map((cat) => (
                 <button
                   key={cat.id}
-                  onClick={() => saveIdea(pickerFor.title, pickerFor.roomCode, cat.id)}
+                  onClick={() => saveIdeaMutation.mutate({ title: pickerFor.title, roomCode: pickerFor.roomCode, categoryId: cat.id })}
                   className='w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-left'
                 >
                   <div

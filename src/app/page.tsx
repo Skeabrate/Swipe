@@ -14,6 +14,8 @@ import { toast } from "sonner";
 import { useT } from "@/i18n/LanguageContext";
 import { useUser, SignInButton, SignUpButton, UserButton, Show } from "@clerk/nextjs";
 import { SavedIdeasPicker } from "@/components/SavedIdeasPicker";
+import { useMutation } from "@tanstack/react-query";
+import * as api from "@/lib/api";
 
 type Mode = "home" | "create" | "join";
 
@@ -31,7 +33,6 @@ export default function Home() {
   const [ideasMode, setIdeasMode] = useState<"open" | "predefined">("open");
   const [predefinedIdeas, setPredefinedIdeas] = useState<string[]>([]);
   const [newIdea, setNewIdea] = useState("");
-  const [creating, setCreating] = useState(false);
 
   // Join form
   const [roomCode, setRoomCode] = useState("");
@@ -44,14 +45,9 @@ export default function Home() {
     }
   }, [isSignedIn, user]);
 
-  const createRoom = async () => {
-    if (!createName.trim() || !topic.trim()) return;
-    setCreating(true);
-
-    const res = await fetch("/api/rooms", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+  const createRoomMutation = useMutation({
+    mutationFn: () =>
+      api.createRoom({
         name: createName.trim(),
         topic: topic.trim(),
         maxSuggestions,
@@ -59,25 +55,17 @@ export default function Home() {
         ideasMode,
         predefinedIdeas,
       }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      toast.error(data.error ?? "Failed to create room");
-      setCreating(false);
-      return;
-    }
-
-    saveSession({
-      token: data.sessionToken,
-      participantId: data.participant.id,
-      roomCode: data.room.code,
-      name: createName.trim(),
-    });
-
-    router.push(`/room/${data.room.code}`);
-  };
+    onSuccess: (data) => {
+      saveSession({
+        token: data.sessionToken,
+        participantId: data.participant.id,
+        roomCode: data.room.code,
+        name: createName.trim(),
+      });
+      router.push(`/room/${data.room.code}`);
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to create room"),
+  });
 
   const joinRoom = () => {
     const code = roomCode.trim().toUpperCase();
@@ -242,7 +230,7 @@ export default function Home() {
                 <Input
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && createRoom()}
+                  onKeyDown={(e) => e.key === "Enter" && createRoomMutation.mutate()}
                   placeholder={t.topicPlaceholder}
                   className='bg-white/10 border-white/20 text-white placeholder:text-white/30 rounded-xl h-13'
                   maxLength={60}
@@ -382,16 +370,16 @@ export default function Home() {
             </div>
 
             <Button
-              onClick={createRoom}
+              onClick={() => createRoomMutation.mutate()}
               disabled={
-                creating ||
+                createRoomMutation.isPending ||
                 !createName.trim() ||
                 !topic.trim() ||
                 (ideasMode === "predefined" && predefinedIdeas.length === 0)
               }
               className='w-full h-14 text-base font-bold rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0 text-white flex-shrink-0'
             >
-              {creating ? (
+              {createRoomMutation.isPending ? (
                 <Loader2
                   size={20}
                   className='animate-spin'

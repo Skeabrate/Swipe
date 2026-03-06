@@ -5,20 +5,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Trash2, Check, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { useRoom } from '../RoomContext';
 import { toast } from 'sonner';
 import { useT } from '@/i18n/LanguageContext';
 import { SavedIdeasPicker } from '@/components/SavedIdeasPicker';
+import { useMutation } from '@tanstack/react-query';
+import * as api from '@/lib/api';
 
 export function Submitting() {
   const { room, participants, suggestions, session, isHost } = useRoom();
   const { t } = useT();
   const [input, setInput] = useState('');
-  const [adding, setAdding] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [forceStarting, setForceStarting] = useState(false);
-  const [spinStarting, setSpinStarting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const mySuggestions = suggestions.filter(s => s.participant_id === session.participantId);
@@ -26,77 +23,46 @@ export function Submitting() {
   const readyCount = participants.filter(p => p.is_ready).length;
   const canAdd = !me?.is_ready && mySuggestions.length < room.max_suggestions;
 
-  const addSuggestion = async (titleOverride?: string) => {
-    const title = (titleOverride ?? input).trim();
-    if (!title) return;
-    setAdding(true);
-    const res = await fetch(`/api/rooms/${room.code}/suggestions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.token}` },
-      body: JSON.stringify({ title }),
-    });
-    if (res.ok) {
+  const addSuggestionMutation = useMutation({
+    mutationFn: (title: string) => api.addRoomSuggestion(room.code, title, session.token),
+    onSuccess: (_, titleOverride) => {
       if (!titleOverride) {
         setInput('');
         inputRef.current?.focus();
       }
-    } else {
-      const err = await res.json();
-      toast.error(err.error ?? 'Failed to add');
-    }
-    setAdding(false);
-  };
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed to add'),
+  });
 
-  const deleteSuggestion = async (id: string) => {
-    await fetch(`/api/rooms/${room.code}/suggestions`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.token}` },
-      body: JSON.stringify({ suggestionId: id }),
-    });
-  };
+  const deleteSuggestionMutation = useMutation({
+    mutationFn: (id: string) => api.deleteRoomSuggestion(room.code, id, session.token),
+    onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed to delete'),
+  });
 
-  const markReady = async () => {
-    setSubmitting(true);
-    const res = await fetch(`/api/rooms/${room.code}/ready`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${session.token}` },
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      toast.error(data.error ?? 'Error');
-    }
-    if (data.reason === 'no_suggestions') {
-      toast.error(t.cantStartNoSuggestions);
-    }
-    setSubmitting(false);
-  };
+  const markReadyMutation = useMutation({
+    mutationFn: () => api.markReady(room.code, session.token),
+    onSuccess: (data) => {
+      if (data?.reason === 'no_suggestions') {
+        toast.error(t.cantStartNoSuggestions);
+      }
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : 'Error'),
+  });
 
-  const forceStart = async () => {
-    setForceStarting(true);
-    const res = await fetch(`/api/rooms/${room.code}/phase`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.token}` },
-      body: JSON.stringify({ phase: 'voting' }),
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      toast.error(err.error ?? 'Failed');
-    }
-    setForceStarting(false);
-  };
+  const forceStartMutation = useMutation({
+    mutationFn: () => api.advancePhase(room.code, 'voting', session.token),
+    onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed'),
+  });
 
-  const spinWheel = async () => {
-    setSpinStarting(true);
-    const res = await fetch(`/api/rooms/${room.code}/phase`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.token}` },
-      body: JSON.stringify({ phase: 'wheel' }),
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      toast.error(err.error ?? 'Failed');
-    }
-    setSpinStarting(false);
+  const spinWheelMutation = useMutation({
+    mutationFn: () => api.advancePhase(room.code, 'wheel', session.token),
+    onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed'),
+  });
+
+  const handleAdd = (titleOverride?: string) => {
+    const title = (titleOverride ?? input).trim();
+    if (!title) return;
+    addSuggestionMutation.mutate(title);
   };
 
   return (
@@ -144,7 +110,7 @@ export function Submitting() {
               <span className="flex-1 text-white text-sm">{s.title}</span>
               {!me?.is_ready && (
                 <button
-                  onClick={() => deleteSuggestion(s.id)}
+                  onClick={() => deleteSuggestionMutation.mutate(s.id)}
                   className="text-white/30 hover:text-red-400 transition-colors p-1"
                 >
                   <Trash2 size={15} />
@@ -165,7 +131,7 @@ export function Submitting() {
       {canAdd && (
         <SavedIdeasPicker
           usedTitles={mySuggestions.map(s => s.title)}
-          onSelect={title => addSuggestion(title)}
+          onSelect={title => handleAdd(title)}
           label={t.savedIdeas}
         />
       )}
@@ -177,17 +143,17 @@ export function Submitting() {
             ref={inputRef}
             value={input}
             onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && addSuggestion()}
+            onKeyDown={e => e.key === 'Enter' && handleAdd()}
             placeholder={`e.g. ${room.topic === 'Movie night' || room.topic === 'Wieczór filmowy' ? 'Interstellar' : '...'}`}
             className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/30 rounded-xl h-12"
             maxLength={80}
           />
           <Button
-            onClick={() => addSuggestion()}
-            disabled={adding || !input.trim()}
+            onClick={() => handleAdd()}
+            disabled={addSuggestionMutation.isPending || !input.trim()}
             className="h-12 w-12 rounded-xl bg-violet-600 hover:bg-violet-500 p-0"
           >
-            {adding ? <Loader2 size={18} className="animate-spin" /> : <Plus size={20} />}
+            {addSuggestionMutation.isPending ? <Loader2 size={18} className="animate-spin" /> : <Plus size={20} />}
           </Button>
         </div>
       )}
@@ -196,11 +162,11 @@ export function Submitting() {
       <div className="space-y-2">
         {!me?.is_ready && (
           <Button
-            onClick={markReady}
-            disabled={submitting}
+            onClick={() => markReadyMutation.mutate()}
+            disabled={markReadyMutation.isPending}
             className="w-full h-14 text-base font-bold rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0 text-white"
           >
-            {submitting ? (
+            {markReadyMutation.isPending ? (
               <Loader2 size={20} className="animate-spin" />
             ) : (
               <span className="flex items-center gap-2">
@@ -212,8 +178,8 @@ export function Submitting() {
 
         {isHost && !me?.is_ready && participants.some(p => p.id !== session.participantId && !p.is_ready) && (
           <button
-            onClick={forceStart}
-            disabled={forceStarting}
+            onClick={() => forceStartMutation.mutate()}
+            disabled={forceStartMutation.isPending}
             className="w-full text-white/30 text-xs hover:text-white/50 transition-colors py-2"
           >
             {t.forceStartBtn}
@@ -222,8 +188,8 @@ export function Submitting() {
 
         {isHost && (
           <Button
-            onClick={spinWheel}
-            disabled={spinStarting}
+            onClick={() => spinWheelMutation.mutate()}
+            disabled={spinWheelMutation.isPending}
             className="w-full h-12 text-base font-bold rounded-2xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300"
           >
             🎡 {t.spinWheel}

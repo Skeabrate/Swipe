@@ -10,6 +10,8 @@ import { Label } from '@/components/ui/label';
 import { saveSession } from '@/lib/session';
 import { toast } from 'sonner';
 import { useT } from '@/i18n/LanguageContext';
+import { useMutation } from '@tanstack/react-query';
+import * as api from '@/lib/api';
 
 interface Props {
   roomCode: string;
@@ -18,39 +20,22 @@ interface Props {
 
 export function JoinGate({ roomCode, topic }: Props) {
   const [name, setName] = useState('');
-  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { t } = useT();
 
-  const join = async () => {
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    setLoading(true);
-
-    const res = await fetch(`/api/rooms/${roomCode}/join`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: trimmed }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      toast.error(data.error ?? 'Failed to join');
-      setLoading(false);
-      return;
-    }
-
-    saveSession({
-      token: data.sessionToken,
-      participantId: data.participant.id,
-      roomCode: roomCode.toUpperCase(),
-      name: trimmed,
-    });
-
-    // Refresh server component
-    router.refresh();
-  };
+  const joinMutation = useMutation({
+    mutationFn: () => api.joinRoom(roomCode, name.trim()),
+    onSuccess: (data) => {
+      saveSession({
+        token: data.sessionToken,
+        participantId: data.participant.id,
+        roomCode: roomCode.toUpperCase(),
+        name: name.trim(),
+      });
+      router.refresh();
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed to join'),
+  });
 
   return (
     <div className="flex flex-col h-full items-center justify-center px-8 gap-8">
@@ -75,7 +60,7 @@ export function JoinGate({ roomCode, topic }: Props) {
           <Input
             value={name}
             onChange={e => setName(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && join()}
+            onKeyDown={e => e.key === 'Enter' && name.trim() && joinMutation.mutate()}
             placeholder="e.g. Alex"
             className="bg-white/10 border-white/20 text-white placeholder:text-white/30 rounded-xl h-14 text-lg"
             autoFocus
@@ -84,11 +69,11 @@ export function JoinGate({ roomCode, topic }: Props) {
         </div>
 
         <Button
-          onClick={join}
-          disabled={loading || !name.trim()}
+          onClick={() => joinMutation.mutate()}
+          disabled={joinMutation.isPending || !name.trim()}
           className="w-full h-14 text-base font-bold rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0 text-white"
         >
-          {loading ? (
+          {joinMutation.isPending ? (
             <Loader2 size={20} className="animate-spin" />
           ) : (
             <span className="flex items-center gap-2">{t.joinRoomBtn} <ArrowRight size={18} /></span>
