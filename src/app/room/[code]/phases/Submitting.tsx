@@ -8,9 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useRoom } from '../RoomContext';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/LanguageContext';
 
 export function Submitting() {
   const { room, participants, suggestions, session, isHost } = useRoom();
+  const { t } = useT();
   const [input, setInput] = useState('');
   const [adding, setAdding] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -60,7 +62,7 @@ export function Submitting() {
       toast.error(data.error ?? 'Error');
     }
     if (data.reason === 'no_suggestions') {
-      toast.error("Can't start — no suggestions yet!");
+      toast.error(t.cantStartNoSuggestions);
     }
     setSubmitting(false);
   };
@@ -84,10 +86,10 @@ export function Submitting() {
       {/* Header */}
       <div>
         <p className="text-white/50 text-xs uppercase tracking-widest mb-1">{room.topic}</p>
-        <h2 className="text-white font-black text-3xl">Add your picks</h2>
+        <h2 className="text-white font-black text-3xl">{t.addYourPicks}</h2>
         <p className="text-white/40 text-sm mt-1">
-          {mySuggestions.length}/{room.max_suggestions} added
-          {me?.is_ready && <span className="text-green-400 ml-2">· You're done!</span>}
+          {t.addedCount(mySuggestions.length, room.max_suggestions)}
+          {me?.is_ready && <span className="text-green-400 ml-2">· {t.youAreDone}</span>}
         </p>
       </div>
 
@@ -107,7 +109,7 @@ export function Submitting() {
             {p.name}
           </div>
         ))}
-        <span className="text-white/30 text-xs ml-1">{readyCount}/{participants.length} ready</span>
+        <span className="text-white/30 text-xs ml-1">{t.readyCount(readyCount, participants.length)}</span>
       </div>
 
       {/* My suggestions list */}
@@ -136,7 +138,7 @@ export function Submitting() {
 
         {mySuggestions.length === 0 && !me?.is_ready && (
           <p className="text-white/25 text-sm text-center pt-4">
-            Nothing yet — add your first pick below
+            {t.nothingYet}
           </p>
         )}
       </div>
@@ -149,7 +151,7 @@ export function Submitting() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && addSuggestion()}
-            placeholder={`e.g. ${room.topic === 'Movie night' ? 'Interstellar' : 'Your idea...'}`}
+            placeholder={`e.g. ${room.topic === 'Movie night' || room.topic === 'Wieczór filmowy' ? 'Interstellar' : '...'}`}
             className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/30 rounded-xl h-12"
             maxLength={80}
           />
@@ -175,7 +177,7 @@ export function Submitting() {
               <Loader2 size={20} className="animate-spin" />
             ) : (
               <span className="flex items-center gap-2">
-                {mySuggestions.length === 0 ? "I'm passing — start voting" : "Done! Start voting"} <ArrowRight size={18} />
+                {mySuggestions.length === 0 ? t.passingStartVoting : t.doneStartVoting} <ArrowRight size={18} />
               </span>
             )}
           </Button>
@@ -187,7 +189,7 @@ export function Submitting() {
             disabled={forceStarting}
             className="w-full text-white/30 text-xs hover:text-white/50 transition-colors py-2"
           >
-            Force start voting now (host)
+            {t.forceStartBtn}
           </button>
         )}
       </div>

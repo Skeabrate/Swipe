@@ -7,9 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useRoom } from '../RoomContext';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/LanguageContext';
 
 export function Lobby() {
   const { room, participants, session, isHost } = useRoom();
+  const { t } = useT();
   const [copied, setCopied] = useState(false);
   const [starting, setStarting] = useState(false);
 
@@ -20,7 +22,7 @@ export function Lobby() {
   const copyLink = async () => {
     await navigator.clipboard.writeText(inviteUrl);
     setCopied(true);
-    toast.success('Link copied!');
+    toast.success(t.linkCopied);
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -46,10 +48,10 @@ export function Lobby() {
         animate={{ opacity: 1, y: 0 }}
         className="text-center"
       >
-        <p className="text-white/50 text-sm uppercase tracking-widest mb-2">Room</p>
+        <p className="text-white/50 text-sm uppercase tracking-widest mb-2">{t.roomLabel}</p>
         <h1 className="text-white font-black text-4xl">{room.topic}</h1>
         <div className="flex items-center justify-center gap-2 mt-3">
-          <span className="text-white/40 text-xs">Code:</span>
+          <span className="text-white/40 text-xs">{t.codeLabel}</span>
           <span className="font-mono text-white font-bold tracking-widest text-lg">{room.code}</span>
         </div>
       </motion.div>
@@ -63,7 +65,7 @@ export function Lobby() {
       >
         <div className="flex items-center gap-2 mb-4">
           <Users size={16} className="text-white/50" />
-          <span className="text-white/50 text-sm uppercase tracking-widest">Waiting for friends</span>
+          <span className="text-white/50 text-sm uppercase tracking-widest">{t.waitingForFriends}</span>
         </div>
 
         <div className="space-y-3 overflow-auto max-h-full">
@@ -84,7 +86,7 @@ export function Lobby() {
               )}
               {p.id === session.participantId && (
                 <Badge variant="outline" className="ml-auto text-white/50 border-white/20 text-xs">
-                  You
+                  {t.youBadge}
                 </Badge>
               )}
             </motion.div>
@@ -113,15 +115,15 @@ export function Lobby() {
             disabled={starting || participants.length < 1}
             className="w-full h-14 text-base font-bold rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0 text-white"
           >
-            {starting ? 'Starting...' : (
+            {starting ? t.startingLabel : (
               <span className="flex items-center gap-2">
-                Start — everyone add their picks <ArrowRight size={18} />
+                {t.startEveryoneAdd} <ArrowRight size={18} />
               </span>
             )}
           </Button>
         ) : (
           <div className="text-center text-white/40 text-sm py-2">
-            Waiting for the host to start...
+            {t.waitingForHost}
           </div>
         )}
       </motion.div>

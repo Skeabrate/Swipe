@@ -6,9 +6,11 @@ import { Loader2 } from 'lucide-react';
 import { SwipeCard, SwipeActionButtons } from '@/components/SwipeCard';
 import { useRoom } from '../RoomContext';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/LanguageContext';
 
 export function Voting() {
   const { room, participants, suggestions, myVotes, session } = useRoom();
+  const { t } = useT();
   const [pending, setPending] = useState(false);
 
   // Shuffle suggestions once (stable across renders)
@@ -68,11 +70,11 @@ export function Voting() {
           className="text-center"
         >
           <div className="text-5xl mb-4">✓</div>
-          <h2 className="text-white font-black text-2xl">You're done!</h2>
+          <h2 className="text-white font-black text-2xl">{t.youAreDoneVoting}</h2>
           <p className="text-white/50 mt-2">
             {votersDone < totalVoters
-              ? `Waiting for ${totalVoters - votersDone} more ${totalVoters - votersDone === 1 ? 'person' : 'people'}...`
-              : 'Tallying results...'}
+              ? t.waitingForMore(totalVoters - votersDone)
+              : t.tallyingResults}
           </p>
           {votersDone < totalVoters && (
             <div className="flex gap-1.5 justify-center mt-6">
@@ -132,7 +134,7 @@ export function Voting() {
 
       {/* Hint + buttons */}
       <div className="flex-shrink-0 px-6 pb-10 pt-6 space-y-4">
-        <p className="text-center text-white/25 text-xs">swipe or tap the buttons</p>
+        <p className="text-center text-white/25 text-xs">{t.swipeHint}</p>
         <SwipeActionButtons
           onDislike={() => handleSwipe(false)}
           onLike={() => handleSwipe(true)}

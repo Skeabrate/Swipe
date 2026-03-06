@@ -7,10 +7,12 @@ import { Button } from '@/components/ui/button';
 import { useRoom } from '../RoomContext';
 import { SuggestionScore } from '@/types';
 import { useRouter } from 'next/navigation';
+import { useT } from '@/i18n/LanguageContext';
 
 export function Results() {
   const { room, suggestions, votes, tiebreakerPicks, participants, session } = useRoom();
   const router = useRouter();
+  const { t } = useT();
   const confettiFired = useRef(false);
 
   // Build scores
@@ -83,30 +85,30 @@ export function Results() {
         >
           <div className="flex items-center justify-center gap-2 mb-3">
             <Trophy size={20} className="text-amber-400" />
-            <span className="text-amber-400 text-sm font-bold uppercase tracking-widest">Winner</span>
+            <span className="text-amber-400 text-sm font-bold uppercase tracking-widest">{t.winnerLabel}</span>
           </div>
 
           <div className="relative rounded-3xl bg-gradient-to-br from-violet-600 to-purple-800 p-8 shadow-2xl shadow-violet-500/30">
             <div className="absolute -top-3 -right-3 text-3xl">🏆</div>
             <p className="text-white font-black text-4xl leading-tight">{winner.suggestion.title}</p>
             {!room.anonymous && winner.suggestion.participant && (
-              <p className="text-white/50 mt-3 text-sm">by {winner.suggestion.participant.name}</p>
+              <p className="text-white/50 mt-3 text-sm">{t.byAuthor(winner.suggestion.participant.name)}</p>
             )}
             <p className="text-white/60 mt-4 text-sm">
-              {winner.likes} {winner.likes === 1 ? 'like' : 'likes'} out of {totalVoters} {totalVoters === 1 ? 'voter' : 'voters'}
+              {t.likesOutOf(winner.likes, totalVoters)}
             </p>
           </div>
         </motion.div>
       )}
 
       {scores.length === 0 && (
-        <div className="text-center text-white/50 py-8">No suggestions were made.</div>
+        <div className="text-center text-white/50 py-8">{t.noSuggestions}</div>
       )}
 
       {/* Full ranking */}
       {scores.length > 1 && (
         <div>
-          <p className="text-white/40 text-xs uppercase tracking-widest mb-3">All picks</p>
+          <p className="text-white/40 text-xs uppercase tracking-widest mb-3">{t.allPicks}</p>
           <div className="space-y-2">
             {scores.map(({ suggestion, likes }, i) => {
               const dislikes = votes.filter(v => v.suggestion_id === suggestion.id && !v.liked).length;
@@ -150,7 +152,7 @@ export function Results() {
           className="w-full h-14 text-base font-bold rounded-2xl bg-white/10 hover:bg-white/15 border-white/20 text-white"
           variant="outline"
         >
-          New room
+          {t.newRoom}
         </Button>
       </motion.div>
     </div>

@@ -6,9 +6,11 @@ import { Check, Loader2 } from 'lucide-react';
 import { useRoom } from '../RoomContext';
 import { SuggestionScore } from '@/types';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/LanguageContext';
 
 export function Tiebreaker() {
   const { room, suggestions, votes, tiebreakerPicks, participants, session, myPick } = useRoom();
+  const { t } = useT();
   const [picking, setPicking] = useState(false);
 
   // Compute tied suggestions (highest score)
@@ -51,10 +53,10 @@ export function Tiebreaker() {
         >
           🤝
         </motion.div>
-        <h2 className="text-white font-black text-3xl">It's a Tie!</h2>
+        <h2 className="text-white font-black text-3xl">{t.itsATie}</h2>
         <p className="text-white/50 mt-2 text-sm">
-          {tiedSuggestions.length} items tied with {maxScore} {maxScore === 1 ? 'like' : 'likes'}.
-          <br />Pick your favourite to break it.
+          {t.tiedWith(tiedSuggestions.length, maxScore)}
+          <br />{t.pickFavourite}
         </p>
       </div>
 
@@ -110,7 +112,7 @@ export function Tiebreaker() {
               )}
               {myPick && pickCount > 0 && (
                 <p className="text-white/40 text-xs mt-2">
-                  {pickCount} {pickCount === 1 ? 'vote' : 'votes'}
+                  {t.tiebreakerVotes(pickCount)}
                 </p>
               )}
             </motion.button>
@@ -120,7 +122,7 @@ export function Tiebreaker() {
 
       {myPick && pickedCount < totalCount && (
         <div className="text-center text-white/40 text-sm">
-          Waiting for {totalCount - pickedCount} more {totalCount - pickedCount === 1 ? 'person' : 'people'}...
+          {t.waitingForMore(totalCount - pickedCount)}
         </div>
       )}
 

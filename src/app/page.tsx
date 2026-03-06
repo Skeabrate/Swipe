@@ -11,13 +11,13 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { saveSession } from '@/lib/session';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/LanguageContext';
 
 type Mode = 'home' | 'create' | 'join';
 
-const TOPIC_CHIPS = ['Movie night', 'Where to eat', 'Weekend plan', 'Game night', 'Vacation'];
-
 export default function Home() {
   const router = useRouter();
+  const { t } = useT();
   const [mode, setMode] = useState<Mode>('home');
 
   // Create form
@@ -85,7 +85,7 @@ export default function Home() {
                 className="text-center"
               >
                 <h1 className="text-white font-black text-7xl tracking-tighter">Swipe</h1>
-                <p className="text-white/40 text-base mt-1">Decide together.</p>
+                <p className="text-white/40 text-base mt-1">{t.subtitle}</p>
               </motion.div>
 
               {/* Decorative card stack */}
@@ -120,14 +120,14 @@ export default function Home() {
                 onClick={() => setMode('create')}
                 className="w-full h-16 text-lg font-bold rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0 text-white gap-3"
               >
-                <Plus size={22} /> Create a room
+                <Plus size={22} /> {t.createRoom}
               </Button>
               <Button
                 onClick={() => setMode('join')}
                 variant="outline"
                 className="w-full h-16 text-lg font-bold rounded-2xl bg-white/5 hover:bg-white/10 border-white/15 text-white gap-3"
               >
-                <Users size={22} /> Join with code
+                <Users size={22} /> {t.joinWithCode}
               </Button>
             </motion.div>
           </motion.div>
@@ -146,16 +146,16 @@ export default function Home() {
               <button onClick={() => setMode('home')} className="text-white/40 hover:text-white transition-colors p-1 -ml-1">
                 <ChevronLeft size={24} />
               </button>
-              <h2 className="text-white font-black text-2xl">New room</h2>
+              <h2 className="text-white font-black text-2xl">{t.newRoomHeading}</h2>
             </div>
 
             <div className="flex-1 space-y-5 overflow-auto pb-1">
               <div className="space-y-2">
-                <Label className="text-white/60 text-sm">Your name</Label>
+                <Label className="text-white/60 text-sm">{t.yourName}</Label>
                 <Input
                   value={createName}
                   onChange={e => setCreateName(e.target.value)}
-                  placeholder="e.g. Jordan"
+                  placeholder={t.namePlaceholder}
                   className="bg-white/10 border-white/20 text-white placeholder:text-white/30 rounded-xl h-13"
                   maxLength={30}
                   autoFocus
@@ -163,23 +163,23 @@ export default function Home() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-white/60 text-sm">What are we deciding?</Label>
+                <Label className="text-white/60 text-sm">{t.whatDeciding}</Label>
                 <Input
                   value={topic}
                   onChange={e => setTopic(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && createRoom()}
-                  placeholder="e.g. Movie night"
+                  placeholder={t.topicPlaceholder}
                   className="bg-white/10 border-white/20 text-white placeholder:text-white/30 rounded-xl h-13"
                   maxLength={60}
                 />
                 <div className="flex flex-wrap gap-2 pt-1">
-                  {TOPIC_CHIPS.map(t => (
+                  {t.topicChips.map(chip => (
                     <button
-                      key={t}
-                      onClick={() => setTopic(t)}
+                      key={chip}
+                      onClick={() => setTopic(chip)}
                       className="text-white/40 hover:text-white/80 text-xs bg-white/5 hover:bg-white/10 rounded-full px-3 py-1.5 transition-all border border-white/10"
                     >
-                      {t}
+                      {chip}
                     </button>
                   ))}
                 </div>
@@ -187,7 +187,7 @@ export default function Home() {
 
               <div className="space-y-3 bg-white/5 rounded-2xl p-4">
                 <div className="flex justify-between items-center">
-                  <Label className="text-white/70 text-sm">Max suggestions per person</Label>
+                  <Label className="text-white/70 text-sm">{t.maxSuggestionsLabel}</Label>
                   <span className="text-white font-bold">{maxSuggestions}</span>
                 </div>
                 <Slider
@@ -202,8 +202,8 @@ export default function Home() {
 
               <div className="flex items-center justify-between bg-white/5 rounded-2xl px-4 py-4">
                 <div>
-                  <p className="text-white font-medium text-sm">Anonymous voting</p>
-                  <p className="text-white/40 text-xs mt-0.5">Hide who suggested what</p>
+                  <p className="text-white font-medium text-sm">{t.anonymousVoting}</p>
+                  <p className="text-white/40 text-xs mt-0.5">{t.anonymousVotingDesc}</p>
                 </div>
                 <Switch checked={anonymous} onCheckedChange={setAnonymous} />
               </div>
@@ -215,7 +215,7 @@ export default function Home() {
               className="w-full h-14 text-base font-bold rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0 text-white flex-shrink-0"
             >
               {creating ? <Loader2 size={20} className="animate-spin" /> : (
-                <span className="flex items-center gap-2">Create room <ArrowRight size={18} /></span>
+                <span className="flex items-center gap-2">{t.createRoomBtn} <ArrowRight size={18} /></span>
               )}
             </Button>
           </motion.div>
@@ -235,11 +235,11 @@ export default function Home() {
                 <button onClick={() => setMode('home')} className="text-white/40 hover:text-white transition-colors p-1 -ml-1">
                   <ChevronLeft size={24} />
                 </button>
-                <h2 className="text-white font-black text-2xl">Join a room</h2>
+                <h2 className="text-white font-black text-2xl">{t.joinARoomHeading}</h2>
               </div>
 
               <div className="space-y-3">
-                <Label className="text-white/60 text-sm">Room code</Label>
+                <Label className="text-white/60 text-sm">{t.roomCodeLabel}</Label>
                 <Input
                   value={roomCode}
                   onChange={e => setRoomCode(e.target.value.toUpperCase())}
@@ -250,7 +250,7 @@ export default function Home() {
                   autoFocus
                 />
                 <p className="text-white/30 text-xs text-center">
-                  Ask the room creator to share their 6-character code
+                  {t.roomCodeHint}
                 </p>
               </div>
             </div>
@@ -260,7 +260,7 @@ export default function Home() {
               disabled={roomCode.trim().length < 6}
               className="w-full h-14 text-base font-bold rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0 text-white"
             >
-              <span className="flex items-center gap-2">Find room <ArrowRight size={18} /></span>
+              <span className="flex items-center gap-2">{t.findRoom} <ArrowRight size={18} /></span>
             </Button>
           </motion.div>
         )}

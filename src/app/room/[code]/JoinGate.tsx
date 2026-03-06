@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { saveSession } from '@/lib/session';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/LanguageContext';
 
 interface Props {
   roomCode: string;
@@ -19,6 +20,7 @@ export function JoinGate({ roomCode, topic }: Props) {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { t } = useT();
 
   const join = async () => {
     const trimmed = name.trim();
@@ -57,9 +59,9 @@ export function JoinGate({ roomCode, topic }: Props) {
         animate={{ opacity: 1, y: 0 }}
         className="text-center"
       >
-        <p className="text-white/40 text-sm uppercase tracking-widest mb-2">Joining</p>
+        <p className="text-white/40 text-sm uppercase tracking-widest mb-2">{t.joining}</p>
         <h1 className="text-white font-black text-4xl">{topic}</h1>
-        <p className="text-white/40 text-sm mt-2">Room <span className="font-mono">{roomCode}</span></p>
+        <p className="text-white/40 text-sm mt-2">{t.roomCodeDisplay(roomCode)}</p>
       </motion.div>
 
       <motion.div
@@ -69,7 +71,7 @@ export function JoinGate({ roomCode, topic }: Props) {
         className="w-full max-w-sm space-y-4"
       >
         <div className="space-y-2">
-          <Label className="text-white/60 text-sm">Your name</Label>
+          <Label className="text-white/60 text-sm">{t.yourName}</Label>
           <Input
             value={name}
             onChange={e => setName(e.target.value)}
@@ -89,7 +91,7 @@ export function JoinGate({ roomCode, topic }: Props) {
           {loading ? (
             <Loader2 size={20} className="animate-spin" />
           ) : (
-            <span className="flex items-center gap-2">Join room <ArrowRight size={18} /></span>
+            <span className="flex items-center gap-2">{t.joinRoomBtn} <ArrowRight size={18} /></span>
           )}
         </Button>
       </motion.div>
