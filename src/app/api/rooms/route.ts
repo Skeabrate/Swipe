@@ -4,7 +4,7 @@ import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 import { generateRoomCode } from '@/lib/roomCode';
 
 export async function POST(req: NextRequest) {
-  const { name, topic, maxSuggestions, anonymous } = await req.json();
+  const { name, topic, maxSuggestions, anonymous, ideasMode, predefinedIdeas } = await req.json();
   const { userId } = await auth();
 
   if (!name?.trim() || !topic?.trim()) {
@@ -30,7 +30,8 @@ export async function POST(req: NextRequest) {
       code,
       topic: topic.trim(),
       max_suggestions: maxSuggestions ?? 10,
-      anonymous: anonymous ?? true,
+      anonymous: anonymous ?? false,
+      ideas_mode: ideasMode ?? 'open',
       host_session_token: sessionToken,
       ...(userId ? { clerk_user_id: userId } : {}),
     })
@@ -50,6 +51,18 @@ export async function POST(req: NextRequest) {
 
   if (partErr || !participant) {
     return NextResponse.json({ error: 'Failed to create participant' }, { status: 500 });
+  }
+
+  // Insert predefined ideas if mode is 'predefined'
+  if (ideasMode === 'predefined' && Array.isArray(predefinedIdeas) && predefinedIdeas.length > 0) {
+    const rows = predefinedIdeas
+      .slice(0, 20)
+      .map((title: string) => ({ room_id: room.id, participant_id: participant.id, title: title.trim() }))
+      .filter(r => r.title.length > 0);
+    if (rows.length > 0) {
+      const { error: sugErr } = await db.from('suggestions').insert(rows);
+      if (sugErr) return NextResponse.json({ error: 'Failed to insert predefined ideas' }, { status: 500 });
+    }
   }
 
   return NextResponse.json({

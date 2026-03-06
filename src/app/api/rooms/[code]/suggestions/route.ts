@@ -28,20 +28,24 @@ export async function POST(
 
   const { data: room } = await db.from('rooms').select('*').eq('code', code.toUpperCase()).single();
   if (!room) return NextResponse.json({ error: 'Room not found' }, { status: 404 });
-  if (room.phase !== 'submitting') return NextResponse.json({ error: 'Submissions are closed' }, { status: 400 });
 
   const participant = await getParticipant(db, token, room.id);
   if (!participant) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  // Check count
-  const { count } = await db
-    .from('suggestions')
-    .select('id', { count: 'exact', head: true })
-    .eq('room_id', room.id)
-    .eq('participant_id', participant.id);
+  const isLobbyPredefined = room.phase === 'lobby' && room.ideas_mode === 'predefined';
+  if (!isLobbyPredefined && room.phase !== 'submitting')
+    return NextResponse.json({ error: 'Submissions are closed' }, { status: 400 });
+  if (isLobbyPredefined && room.host_session_token !== token)
+    return NextResponse.json({ error: 'Only the host can add ideas in predefined mode' }, { status: 403 });
 
-  if ((count ?? 0) >= room.max_suggestions) {
-    return NextResponse.json({ error: `Max ${room.max_suggestions} suggestions reached` }, { status: 400 });
+  // Check count — total cap of 20 for predefined, per-person cap for open
+  const countQuery = db.from('suggestions').select('id', { count: 'exact', head: true }).eq('room_id', room.id);
+  if (!isLobbyPredefined) countQuery.eq('participant_id', participant.id);
+  const { count } = await countQuery;
+
+  const cap = isLobbyPredefined ? 20 : room.max_suggestions;
+  if ((count ?? 0) >= cap) {
+    return NextResponse.json({ error: `Max ${cap} suggestions reached` }, { status: 400 });
   }
 
   const { data: suggestion, error } = await db
@@ -69,10 +73,15 @@ export async function DELETE(
 
   const { data: room } = await db.from('rooms').select('*').eq('code', code.toUpperCase()).single();
   if (!room) return NextResponse.json({ error: 'Room not found' }, { status: 404 });
-  if (room.phase !== 'submitting') return NextResponse.json({ error: 'Submissions are closed' }, { status: 400 });
 
   const participant = await getParticipant(db, token, room.id);
   if (!participant) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const isLobbyPredefined = room.phase === 'lobby' && room.ideas_mode === 'predefined';
+  if (!isLobbyPredefined && room.phase !== 'submitting')
+    return NextResponse.json({ error: 'Submissions are closed' }, { status: 400 });
+  if (isLobbyPredefined && room.host_session_token !== token)
+    return NextResponse.json({ error: 'Only the host can remove ideas in predefined mode' }, { status: 403 });
 
   await db.from('suggestions').delete().eq('id', suggestionId).eq('participant_id', participant.id);
 

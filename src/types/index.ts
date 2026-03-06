@@ -8,6 +8,7 @@ export interface Room {
   host_session_token: string;
   max_suggestions: number;
   anonymous: boolean;
+  ideas_mode: 'open' | 'predefined';
   created_at: string;
   wheel_winner_id?: string | null;
 }

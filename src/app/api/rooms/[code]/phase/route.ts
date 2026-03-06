@@ -22,6 +22,15 @@ export async function POST(
     // Lobby → Submitting
     if (room.phase !== 'lobby') return NextResponse.json({ error: 'Invalid transition' }, { status: 400 });
     await db.from('rooms').update({ phase: 'submitting' }).eq('id', room.id);
+  } else if (phase === 'voting' && room.phase === 'lobby') {
+    // Predefined mode: skip submitting, go straight to voting
+    if (room.ideas_mode !== 'predefined') return NextResponse.json({ error: 'Invalid transition' }, { status: 400 });
+    const { count: predefinedCount } = await db
+      .from('suggestions')
+      .select('id', { count: 'exact', head: true })
+      .eq('room_id', room.id);
+    if ((predefinedCount ?? 0) === 0) return NextResponse.json({ error: 'Need at least one suggestion to start voting' }, { status: 400 });
+    await db.from('rooms').update({ phase: 'voting' }).eq('id', room.id);
   } else if (phase === 'voting') {
     // Force close submissions (host override)
     if (room.phase !== 'submitting') return NextResponse.json({ error: 'Invalid transition' }, { status: 400 });

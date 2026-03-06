@@ -88,6 +88,7 @@ create policy "public_read" on tiebreaker_picks for select using (true);
 alter table participants add column if not exists clerk_user_id text;
 alter table rooms add column if not exists clerk_user_id text;
 alter table rooms add column if not exists wheel_winner_id uuid references suggestions(id) on delete set null;
+alter table rooms add column if not exists ideas_mode text not null default 'open' check (ideas_mode in ('open', 'predefined'));
 
 create table if not exists user_profiles (
   id            uuid primary key default gen_random_uuid(),
