@@ -13,6 +13,7 @@ import { SavedIdeasPicker } from '@/components/SavedIdeasPicker';
 import { useMutation } from '@tanstack/react-query';
 import * as api from '@/lib/api';
 import { SpinWheelButton } from '../SpinWheelButton';
+import type { RoomMessage } from '@/types';
 
 export function Lobby() {
   const { room, participants, suggestions, messages, session, isHost } = useRoom();
@@ -20,6 +21,7 @@ export function Lobby() {
   const [copied, setCopied] = useState(false);
   const [newIdea, setNewIdea] = useState('');
   const [chatInput, setChatInput] = useState('');
+  const [optimisticMessages, setOptimisticMessages] = useState<RoomMessage[]>([]);
   const chatInputRef = useRef<HTMLInputElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -42,20 +44,51 @@ export function Lobby() {
     if (isNearBottom) {
       container.scrollTop = container.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, optimisticMessages]);
+
+  // Remove optimistic messages once the real ones arrive via realtime
+  useEffect(() => {
+    if (optimisticMessages.length === 0) return;
+    setOptimisticMessages((prev) => {
+      let remaining = [...prev];
+      for (const msg of messages) {
+        if (msg.participant_id === session.participantId) {
+          const idx = remaining.findIndex((o) => o.content === msg.content);
+          if (idx !== -1) remaining.splice(idx, 1);
+        }
+      }
+      return remaining.length === prev.length ? prev : remaining;
+    });
+  }, [messages, session.participantId]);
 
   const sendMessageMutation = useMutation({
     mutationFn: (content: string) => api.sendChatMessage(room.code, content, session.token),
-    onSuccess: () => {
+    onMutate: (content) => {
+      const optimistic: RoomMessage = {
+        id: `optimistic-${Date.now()}`,
+        room_id: room.id,
+        participant_id: session.participantId,
+        content,
+        created_at: new Date().toISOString(),
+        participant: participants.find((p) => p.id === session.participantId),
+      };
+      setOptimisticMessages((prev) => [...prev, optimistic]);
       setChatInput('');
-      chatInputRef.current?.focus();
+      requestAnimationFrame(() => chatInputRef.current?.focus());
+      return { optimistic };
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed to send'),
+    onError: (err, _content, context) => {
+      if (context?.optimistic) {
+        setOptimisticMessages((prev) => prev.filter((m) => m.id !== context.optimistic.id));
+        setChatInput(context.optimistic.content);
+      }
+      toast.error(err instanceof Error ? err.message : 'Failed to send');
+    },
   });
 
   const handleSend = () => {
     const trimmed = chatInput.trim();
-    if (!trimmed || sendMessageMutation.isPending) return;
+    if (!trimmed) return;
     sendMessageMutation.mutate(trimmed);
   };
 
@@ -146,14 +179,15 @@ export function Lobby() {
         </div>
 
         <div ref={chatContainerRef} className="max-h-48 overflow-y-auto rounded-2xl bg-white/5 p-3 space-y-2">
-          {messages.length === 0 ? (
+          {messages.length === 0 && optimisticMessages.length === 0 ? (
             <p className="py-2 text-center text-sm text-white/25">{t.chatEmptyState}</p>
           ) : (
-            messages.map((msg) => {
+            [...messages, ...optimisticMessages].map((msg) => {
               const isMe = msg.participant_id === session.participantId;
+              const isOptimistic = msg.id.startsWith('optimistic-');
               const name = msg.participant?.name ?? participants.find((p) => p.id === msg.participant_id)?.name ?? '?';
               return (
-                <div key={msg.id} className={`flex gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
+                <div key={msg.id} className={`flex gap-2 transition-opacity ${isMe ? 'flex-row-reverse' : ''} ${isOptimistic ? 'opacity-60' : ''}`}>
                   <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-purple-700 text-xs font-bold text-white">
                     {name[0].toUpperCase()}
                   </div>
@@ -177,11 +211,10 @@ export function Lobby() {
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder={t.chatPlaceholder}
             className="flex-1 rounded-xl border-white/20 bg-white/10 text-white placeholder:text-white/30"
-            disabled={sendMessageMutation.isPending}
           />
           <button
             onClick={handleSend}
-            disabled={sendMessageMutation.isPending || !chatInput.trim()}
+            disabled={!chatInput.trim()}
             aria-label={t.chatSendAriaLabel}
             className="rounded-xl bg-violet-600 px-3 text-white transition-colors hover:bg-violet-500 disabled:opacity-40"
           >
