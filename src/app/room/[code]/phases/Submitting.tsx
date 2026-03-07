@@ -108,7 +108,8 @@ export function Submitting() {
               {!me?.is_ready && (
                 <button
                   onClick={() => deleteSuggestionMutation.mutate(s.id)}
-                  className='text-white/30 hover:text-red-400 transition-colors p-1'
+                  disabled={deleteSuggestionMutation.isPending}
+                  className='text-white/30 hover:text-red-400 transition-colors p-1 disabled:opacity-40'
                 >
                   <Trash2 size={15} />
                 </button>
@@ -139,7 +140,7 @@ export function Submitting() {
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+            onKeyDown={(e) => e.key === "Enter" && !addSuggestionMutation.isPending && handleAdd()}
             placeholder={`e.g. ${room.topic === "Movie night" || room.topic === "Wieczór filmowy" ? "Interstellar" : "..."}`}
             className='flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/30 rounded-xl h-12'
             maxLength={80}

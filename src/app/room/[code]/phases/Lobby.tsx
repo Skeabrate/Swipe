@@ -141,7 +141,8 @@ export function Lobby() {
                   {isHost && (
                     <button
                       onClick={() => removeIdeaMutation.mutate(s.id)}
-                      className='text-white/25 hover:text-red-400 transition-colors p-1 flex-shrink-0'
+                      disabled={removeIdeaMutation.isPending}
+                      className='text-white/25 hover:text-red-400 transition-colors p-1 flex-shrink-0 disabled:opacity-40'
                     >
                       <Trash2 size={14} />
                     </button>
@@ -160,7 +161,7 @@ export function Lobby() {
                 <Input
                   value={newIdea}
                   onChange={(e) => setNewIdea(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && newIdea.trim() && addIdeaMutation.mutate(newIdea.trim())}
+                  onKeyDown={(e) => e.key === "Enter" && newIdea.trim() && !addIdeaMutation.isPending && addIdeaMutation.mutate(newIdea.trim())}
                   placeholder={t.predefinedIdeaPlaceholder}
                   className='bg-white/10 border-white/20 text-white placeholder:text-white/30 rounded-xl flex-1'
                   maxLength={60}
@@ -192,6 +193,7 @@ export function Lobby() {
       >
         <button
           onClick={copyLink}
+          disabled={copied}
           className='w-full flex items-center gap-3 bg-white/10 hover:bg-white/15 rounded-2xl px-5 py-4 text-white transition-all'
         >
           {copied ? (

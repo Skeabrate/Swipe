@@ -193,7 +193,8 @@ export default function HistoryPage() {
                 <button
                   key={cat.id}
                   onClick={() => saveIdeaMutation.mutate({ title: pickerFor.title, roomCode: pickerFor.roomCode, categoryId: cat.id })}
-                  className='w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-left'
+                  disabled={saveIdeaMutation.isPending}
+                  className='w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-left disabled:opacity-50'
                 >
                   <div
                     className='w-3 h-3 rounded-full flex-shrink-0'

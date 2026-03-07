@@ -38,9 +38,11 @@ const PRESET_COLORS = ['#7c3aed', '#2563eb', '#059669', '#d97706', '#dc2626', '#
 function SortableIdeaItem({
   idea,
   onDelete,
+  isDeleting,
 }: {
   idea: Idea;
   onDelete: () => void;
+  isDeleting: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: idea.id });
   const style = {
@@ -59,7 +61,7 @@ function SortableIdeaItem({
         <GripVertical size={14} />
       </button>
       <span className="flex-1 text-white/80 text-sm">{idea.title}</span>
-      <button onClick={onDelete} className="text-white/20 hover:text-red-400 transition-colors flex-shrink-0">
+      <button onClick={onDelete} disabled={isDeleting} className="text-white/20 hover:text-red-400 transition-colors flex-shrink-0 disabled:opacity-40">
         <Trash2 size={14} />
       </button>
     </li>
@@ -76,6 +78,8 @@ function DroppableCategory({
   onAddIdea,
   onDeleteIdea,
   onDeleteCategory,
+  isAddingIdea,
+  isIdeaDeleting,
   t,
 }: {
   cat: Category;
@@ -87,6 +91,8 @@ function DroppableCategory({
   onAddIdea: (catId: string) => void;
   onDeleteIdea: (id: string) => void;
   onDeleteCategory: (cat: Category, count: number) => void;
+  isAddingIdea: boolean;
+  isIdeaDeleting: (id: string) => boolean;
   t: ReturnType<typeof import('@/i18n/LanguageContext').useT>['t'];
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: cat.id });
@@ -109,7 +115,7 @@ function DroppableCategory({
       <SortableContext items={ideas.map(i => i.id)} strategy={verticalListSortingStrategy}>
         <ul>
           {ideas.map(idea => (
-            <SortableIdeaItem key={idea.id} idea={idea} onDelete={() => onDeleteIdea(idea.id)} />
+            <SortableIdeaItem key={idea.id} idea={idea} onDelete={() => onDeleteIdea(idea.id)} isDeleting={isIdeaDeleting(idea.id)} />
           ))}
         </ul>
       </SortableContext>
@@ -124,14 +130,14 @@ function DroppableCategory({
             value={newIdeaTitle}
             onChange={e => setNewIdeaTitle(e.target.value)}
             onKeyDown={e => {
-              if (e.key === 'Enter') onAddIdea(cat.id);
+              if (e.key === 'Enter' && !isAddingIdea) onAddIdea(cat.id);
               if (e.key === 'Escape') setAddingIdeaFor(null);
             }}
             placeholder={t.newIdeaPlaceholder}
             className="bg-white/10 border-white/20 text-white placeholder:text-white/30 rounded-xl h-10 text-sm"
             autoFocus
           />
-          <button onClick={() => onAddIdea(cat.id)} className="text-violet-400 hover:text-violet-300 px-2">
+          <button onClick={() => onAddIdea(cat.id)} disabled={isAddingIdea} className="text-violet-400 hover:text-violet-300 px-2 disabled:opacity-40">
             <Check size={18} />
           </button>
           <button onClick={() => setAddingIdeaFor(null)} className="text-white/40 hover:text-white/70 px-1">
@@ -354,7 +360,7 @@ export default function ProfilePage() {
                     value={usernameInput}
                     onChange={e => setUsernameInput(e.target.value)}
                     onKeyDown={e => {
-                      if (e.key === 'Enter') saveProfileMutation.mutate({ username: usernameInput || null });
+                      if (e.key === 'Enter' && !saveProfileMutation.isPending) saveProfileMutation.mutate({ username: usernameInput || null });
                       if (e.key === 'Escape') setEditingUsername(false);
                     }}
                     className="bg-white/10 border-white/20 text-white h-9 rounded-lg text-sm"
@@ -363,7 +369,8 @@ export default function ProfilePage() {
                   />
                   <button
                     onClick={() => saveProfileMutation.mutate({ username: usernameInput || null })}
-                    className="text-violet-400 hover:text-violet-300"
+                    disabled={saveProfileMutation.isPending}
+                    className="text-violet-400 hover:text-violet-300 disabled:opacity-40"
                   >
                     <Check size={18} />
                   </button>
@@ -417,7 +424,7 @@ export default function ProfilePage() {
                 value={newCategoryName}
                 onChange={e => setNewCategoryName(e.target.value)}
                 onKeyDown={e => {
-                  if (e.key === 'Enter') addCategoryMutation.mutate();
+                  if (e.key === 'Enter' && !addCategoryMutation.isPending) addCategoryMutation.mutate();
                   if (e.key === 'Escape') setAddingCategory(false);
                 }}
                 placeholder={t.categoryNamePlaceholder}
@@ -455,6 +462,8 @@ export default function ProfilePage() {
                 onAddIdea={(catId) => addIdeaMutation.mutate({ title: newIdeaTitle.trim(), categoryId: catId })}
                 onDeleteIdea={(id) => deleteIdeaMutation.mutate(id)}
                 onDeleteCategory={requestDeleteCategory}
+                isAddingIdea={addIdeaMutation.isPending}
+                isIdeaDeleting={(id) => deleteIdeaMutation.isPending && deleteIdeaMutation.variables === id}
                 t={t}
               />
             ))}
