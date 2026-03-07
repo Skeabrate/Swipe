@@ -38,7 +38,7 @@ export function SessionLoader({ initialData }: Props) {
 
   if (session === 'loading') {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex h-screen items-center justify-center">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-violet-400" />
       </div>
     );
