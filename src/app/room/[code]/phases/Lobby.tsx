@@ -20,7 +20,8 @@ export function Lobby() {
   const [copied, setCopied] = useState(false);
   const [newIdea, setNewIdea] = useState('');
   const [chatInput, setChatInput] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatInputRef = useRef<HTMLInputElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const inviteUrl =
     typeof window !== 'undefined' ? `${window.location.origin}/room/${room.code}` : '';
@@ -35,12 +36,20 @@ export function Lobby() {
   const isPredefined = room.ideas_mode === 'predefined';
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = chatContainerRef.current;
+    if (!container) return;
+    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+    if (isNearBottom) {
+      container.scrollTop = container.scrollHeight;
+    }
   }, [messages]);
 
   const sendMessageMutation = useMutation({
     mutationFn: (content: string) => api.sendChatMessage(room.code, content, session.token),
-    onSuccess: () => setChatInput(''),
+    onSuccess: () => {
+      setChatInput('');
+      chatInputRef.current?.focus();
+    },
     onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed to send'),
   });
 
@@ -136,7 +145,7 @@ export function Lobby() {
           <span className="text-sm tracking-widest text-white/50 uppercase">{t.chatLabel}</span>
         </div>
 
-        <div className="max-h-48 overflow-y-auto rounded-2xl bg-white/5 p-3 space-y-2">
+        <div ref={chatContainerRef} className="max-h-48 overflow-y-auto rounded-2xl bg-white/5 p-3 space-y-2">
           {messages.length === 0 ? (
             <p className="py-2 text-center text-sm text-white/25">{t.chatEmptyState}</p>
           ) : (
@@ -158,11 +167,11 @@ export function Lobby() {
               );
             })
           )}
-          <div ref={messagesEndRef} />
         </div>
 
         <div className="flex gap-2">
           <Input
+            ref={chatInputRef}
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value.slice(0, 200))}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
