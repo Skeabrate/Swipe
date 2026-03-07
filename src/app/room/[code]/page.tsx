@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation';
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 import { SessionLoader } from './SessionLoader';
 
+export const dynamic = 'force-dynamic';
+
 interface Props {
   params: Promise<{ code: string }>;
 }

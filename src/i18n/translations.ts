@@ -120,6 +120,8 @@ export const translations = {
     signUp: 'Sign up',
     myIdeas: 'My Ideas',
     history: 'History',
+    loginRequiredTitle: 'Sign in required',
+    loginRequiredDesc: 'History and My Ideas are only available for signed-in users.',
 
     // History page
     roomHistory: 'Room History',
@@ -278,6 +280,8 @@ export const translations = {
     signUp: 'Zarejestruj',
     myIdeas: 'Moje pomysły',
     history: 'Historia',
+    loginRequiredTitle: 'Wymagane logowanie',
+    loginRequiredDesc: 'Historia i Moje pomysły są dostępne tylko dla zalogowanych użytkowników.',
 
     // History page
     roomHistory: 'Historia pokojów',

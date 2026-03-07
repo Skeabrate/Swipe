@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Loader2, Plus, Users, ChevronLeft, BookOpen, History, X } from 'lucide-react';
+import { ArrowRight, Loader2, Plus, Users, ChevronLeft, BookOpen, History, X, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -38,6 +38,8 @@ export default function Home() {
 
   // Join form
   const [roomCode, setRoomCode] = useState('');
+
+  const [loginRequiredOpen, setLoginRequiredOpen] = useState(false);
 
   // Auto-fill name when user is signed in
   useEffect(() => {
@@ -167,25 +169,25 @@ export default function Home() {
                 <Users size={22} /> {t.joinWithCode}
               </Button>
 
-              {/* Logged-in quick links */}
-              <Show when="signed-in">
-                <div className="flex gap-2 pt-1">
-                  <Button
-                    onClick={() => router.push('/profile')}
-                    variant="outline"
-                    className="h-12 flex-1 gap-2 rounded-2xl border-white/15 bg-white/5 text-sm text-white/70 hover:bg-white/10 hover:text-white"
-                  >
-                    <BookOpen size={16} /> {t.myIdeas}
-                  </Button>
-                  <Button
-                    onClick={() => router.push('/history')}
-                    variant="outline"
-                    className="h-12 flex-1 gap-2 rounded-2xl border-white/15 bg-white/5 text-sm text-white/70 hover:bg-white/10 hover:text-white"
-                  >
-                    <History size={16} /> {t.history}
-                  </Button>
-                </div>
-              </Show>
+              {/* Quick links — always visible, locked for guests */}
+              <div className="flex gap-2 pt-1">
+                <Button
+                  onClick={() => isSignedIn ? router.push('/profile') : setLoginRequiredOpen(true)}
+                  variant="outline"
+                  className="relative h-12 flex-1 gap-2 rounded-2xl border-white/15 bg-white/5 text-sm text-white/70 hover:bg-white/10 hover:text-white"
+                >
+                  {isSignedIn ? <BookOpen size={16} /> : <Lock size={16} className="text-white/40" />}
+                  {t.myIdeas}
+                </Button>
+                <Button
+                  onClick={() => isSignedIn ? router.push('/history') : setLoginRequiredOpen(true)}
+                  variant="outline"
+                  className="relative h-12 flex-1 gap-2 rounded-2xl border-white/15 bg-white/5 text-sm text-white/70 hover:bg-white/10 hover:text-white"
+                >
+                  {isSignedIn ? <History size={16} /> : <Lock size={16} className="text-white/40" />}
+                  {t.history}
+                </Button>
+              </div>
             </motion.div>
           </motion.div>
         )}
@@ -501,6 +503,65 @@ export default function Home() {
                 {t.findRoom} <ArrowRight size={18} />
               </span>
             </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Login-required modal */}
+      <AnimatePresence>
+        {loginRequiredOpen && (
+          <motion.div
+            key="login-modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 pb-6 px-6"
+            onClick={() => setLoginRequiredOpen(false)}
+          >
+            <motion.div
+              key="login-modal"
+              initial={{ opacity: 0, y: 32 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 32 }}
+              transition={{ duration: 0.2, type: 'spring', stiffness: 300, damping: 28 }}
+              className="w-full max-w-sm rounded-3xl bg-[#16161f] border border-white/10 p-6 space-y-5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/8">
+                  <Lock size={20} className="text-white/60" />
+                </div>
+                <button
+                  onClick={() => setLoginRequiredOpen(false)}
+                  className="p-1 text-white/30 transition-colors hover:text-white"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="text-lg font-bold text-white">{t.loginRequiredTitle}</h3>
+                <p className="text-sm text-white/50">{t.loginRequiredDesc}</p>
+              </div>
+              <div className="flex gap-2">
+                <SignInButton mode="modal">
+                  <button
+                    onClick={() => setLoginRequiredOpen(false)}
+                    className="flex-1 h-11 rounded-xl bg-violet-600 text-sm font-semibold text-white transition-colors hover:bg-violet-500"
+                  >
+                    {t.signIn}
+                  </button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <button
+                    onClick={() => setLoginRequiredOpen(false)}
+                    className="flex-1 h-11 rounded-xl bg-white/10 text-sm font-semibold text-white transition-colors hover:bg-white/15"
+                  >
+                    {t.signUp}
+                  </button>
+                </SignUpButton>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
