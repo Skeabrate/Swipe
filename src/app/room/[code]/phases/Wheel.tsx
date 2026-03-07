@@ -8,17 +8,21 @@ import { useRoom } from '../RoomContext';
 import { useT } from '@/i18n/LanguageContext';
 
 const PALETTE = [
-  '#7c3aed', '#2563eb', '#059669', '#d97706', '#dc2626', '#db2777',
-  '#0891b2', '#65a30d', '#9333ea', '#ea580c', '#0284c7', '#be185d',
+  '#7c3aed',
+  '#2563eb',
+  '#059669',
+  '#d97706',
+  '#dc2626',
+  '#db2777',
+  '#0891b2',
+  '#65a30d',
+  '#9333ea',
+  '#ea580c',
+  '#0284c7',
+  '#be185d',
 ];
 
-function WheelSVG({
-  segments,
-  rotation,
-}: {
-  segments: string[];
-  rotation: number;
-}) {
+function WheelSVG({ segments, rotation }: { segments: string[]; rotation: number }) {
   const n = segments.length;
   const cx = 150;
   const cy = 150;
@@ -119,13 +123,11 @@ export function Wheel() {
   const confettiFired = useRef(false);
 
   const n = suggestions.length;
-  const winnerIdx = suggestions.findIndex(s => s.id === room.wheel_winner_id);
+  const winnerIdx = suggestions.findIndex((s) => s.id === room.wheel_winner_id);
 
   // Compute stop angle so the winner segment lands at the top pointer
   const stopAngle =
-    winnerIdx >= 0
-      ? 5 * 360 + (360 - winnerIdx * (360 / n) - (360 / n) / 2)
-      : 5 * 360;
+    winnerIdx >= 0 ? 5 * 360 + (360 - winnerIdx * (360 / n) - 360 / n / 2) : 5 * 360;
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -133,9 +135,20 @@ export function Wheel() {
       if (!confettiFired.current) {
         confettiFired.current = true;
         import('canvas-confetti').then(({ default: confetti }) => {
-          confetti({ particleCount: 120, spread: 80, origin: { y: 0.55 }, colors: ['#a855f7', '#7c3aed', '#ec4899', '#f59e0b'] });
-          setTimeout(() => confetti({ particleCount: 60, spread: 60, origin: { y: 0.55 }, angle: 60 }), 300);
-          setTimeout(() => confetti({ particleCount: 60, spread: 60, origin: { y: 0.55 }, angle: 120 }), 500);
+          confetti({
+            particleCount: 120,
+            spread: 80,
+            origin: { y: 0.55 },
+            colors: ['#a855f7', '#7c3aed', '#ec4899', '#f59e0b'],
+          });
+          setTimeout(
+            () => confetti({ particleCount: 60, spread: 60, origin: { y: 0.55 }, angle: 60 }),
+            300,
+          );
+          setTimeout(
+            () => confetti({ particleCount: 60, spread: 60, origin: { y: 0.55 }, angle: 120 }),
+            500,
+          );
         });
       }
     }, 4700);
@@ -146,31 +159,26 @@ export function Wheel() {
   const showLegend = n > 8;
 
   return (
-    <div className="flex flex-col h-full px-6 pt-16 pb-8 gap-6 items-center overflow-auto">
+    <div className="flex h-full flex-col items-center gap-6 overflow-auto px-6 pt-16 pb-8">
       <div className="text-center">
-        <p className="text-white/50 text-xs uppercase tracking-widest mb-1">{room.topic}</p>
-        <h2 className="text-white font-black text-3xl">
-          {spinning ? t.wheelSpinning : '🎉'}
-        </h2>
+        <p className="mb-1 text-xs tracking-widest text-white/50 uppercase">{room.topic}</p>
+        <h2 className="text-3xl font-black text-white">{spinning ? t.wheelSpinning : '🎉'}</h2>
       </div>
 
-      <WheelSVG
-        segments={suggestions.map(s => s.title)}
-        rotation={stopAngle}
-      />
+      <WheelSVG segments={suggestions.map((s) => s.title)} rotation={stopAngle} />
 
       {!spinning && winner && (
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ type: 'spring', stiffness: 280, damping: 20 }}
-          className="text-center w-full"
+          className="w-full text-center"
         >
           <div className="rounded-3xl bg-gradient-to-br from-violet-600 to-purple-800 p-6 shadow-2xl shadow-violet-500/30">
-            <p className="text-white/70 text-sm mb-1">{t.chosenByWheel} 🎡</p>
-            <p className="text-white font-black text-3xl">{winner.title}</p>
+            <p className="mb-1 text-sm text-white/70">{t.chosenByWheel} 🎡</p>
+            <p className="text-3xl font-black text-white">{winner.title}</p>
             {!room.anonymous && winner.participant && (
-              <p className="text-white/50 mt-2 text-sm">{t.byAuthor(winner.participant.name)}</p>
+              <p className="mt-2 text-sm text-white/50">{t.byAuthor(winner.participant.name)}</p>
             )}
           </div>
         </motion.div>
@@ -181,7 +189,7 @@ export function Wheel() {
           {suggestions.map((s, i) => (
             <div key={s.id} className="flex items-center gap-2 text-sm">
               <span
-                className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-white text-xs font-bold"
+                className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
                 style={{ backgroundColor: PALETTE[i % PALETTE.length] }}
               >
                 {i + 1}
@@ -194,17 +202,21 @@ export function Wheel() {
 
       {!spinning && suggestions.length > 1 && (
         <div className="w-full">
-          <p className="text-white/40 text-xs uppercase tracking-widest mb-3">{t.allPicks}</p>
+          <p className="mb-3 text-xs tracking-widest text-white/40 uppercase">{t.allPicks}</p>
           <div className="space-y-2">
             {suggestions.map((s, i) => (
               <div
                 key={s.id}
                 className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${
-                  s.id === room.wheel_winner_id ? 'bg-violet-500/20 border border-violet-500/30' : 'bg-white/5'
+                  s.id === room.wheel_winner_id
+                    ? 'border border-violet-500/30 bg-violet-500/20'
+                    : 'bg-white/5'
                 }`}
               >
-                <span className="text-white/30 text-sm w-5 text-right flex-shrink-0">{i + 1}</span>
-                <span className={`flex-1 text-sm font-medium ${s.id === room.wheel_winner_id ? 'text-white' : 'text-white/60'}`}>
+                <span className="w-5 flex-shrink-0 text-right text-sm text-white/30">{i + 1}</span>
+                <span
+                  className={`flex-1 text-sm font-medium ${s.id === room.wheel_winner_id ? 'text-white' : 'text-white/60'}`}
+                >
                   {s.title}
                 </span>
               </div>
@@ -214,10 +226,10 @@ export function Wheel() {
       )}
 
       {!spinning && (
-        <div className="w-full mt-auto">
+        <div className="mt-auto w-full">
           <Button
             onClick={() => router.push('/')}
-            className="w-full h-14 text-base font-bold rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0 text-white"
+            className="h-14 w-full rounded-2xl border-0 bg-gradient-to-r from-violet-600 to-purple-600 text-base font-bold text-white hover:from-violet-500 hover:to-purple-500"
           >
             {t.newRoom}
           </Button>

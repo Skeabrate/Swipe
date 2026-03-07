@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ code: string }> }
-) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
   const token = req.headers.get('authorization')?.replace('Bearer ', '') ?? null;
 
@@ -14,7 +11,8 @@ export async function POST(
 
   const { data: room } = await db.from('rooms').select('*').eq('code', code.toUpperCase()).single();
   if (!room) return NextResponse.json({ error: 'Room not found' }, { status: 404 });
-  if (room.phase !== 'submitting') return NextResponse.json({ error: 'Not in submitting phase' }, { status: 400 });
+  if (room.phase !== 'submitting')
+    return NextResponse.json({ error: 'Not in submitting phase' }, { status: 400 });
 
   const { data: participant } = await db
     .from('participants')

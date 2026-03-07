@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ code: string }> }
-) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
   const token = req.headers.get('authorization')?.replace('Bearer ', '') ?? null;
   const { suggestionId } = await req.json();
@@ -15,7 +12,8 @@ export async function POST(
 
   const { data: room } = await db.from('rooms').select('*').eq('code', code.toUpperCase()).single();
   if (!room) return NextResponse.json({ error: 'Room not found' }, { status: 404 });
-  if (room.phase !== 'tiebreaker') return NextResponse.json({ error: 'Not in tiebreaker phase' }, { status: 400 });
+  if (room.phase !== 'tiebreaker')
+    return NextResponse.json({ error: 'Not in tiebreaker phase' }, { status: 400 });
 
   const { data: participant } = await db
     .from('participants')
@@ -27,11 +25,14 @@ export async function POST(
   if (!participant) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   // Upsert pick
-  await db.from('tiebreaker_picks').upsert({
-    room_id: room.id,
-    suggestion_id: suggestionId,
-    participant_id: participant.id,
-  }, { onConflict: 'room_id,participant_id' });
+  await db.from('tiebreaker_picks').upsert(
+    {
+      room_id: room.id,
+      suggestion_id: suggestionId,
+      participant_id: participant.id,
+    },
+    { onConflict: 'room_id,participant_id' },
+  );
 
   // Check if all participants have picked
   const { data: participants } = await db.from('participants').select('id').eq('room_id', room.id);

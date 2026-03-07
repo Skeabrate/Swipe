@@ -1,26 +1,27 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Copy, Check, Users, Crown, ArrowRight, Lightbulb, Plus, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { useRoom } from "../RoomContext";
-import { toast } from "sonner";
-import { useT } from "@/i18n/LanguageContext";
-import { SavedIdeasPicker } from "@/components/SavedIdeasPicker";
-import { useMutation } from "@tanstack/react-query";
-import * as api from "@/lib/api";
-import { SpinWheelButton } from "../SpinWheelButton";
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Copy, Check, Users, Crown, ArrowRight, Lightbulb, Plus, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { useRoom } from '../RoomContext';
+import { toast } from 'sonner';
+import { useT } from '@/i18n/LanguageContext';
+import { SavedIdeasPicker } from '@/components/SavedIdeasPicker';
+import { useMutation } from '@tanstack/react-query';
+import * as api from '@/lib/api';
+import { SpinWheelButton } from '../SpinWheelButton';
 
 export function Lobby() {
   const { room, participants, suggestions, session, isHost } = useRoom();
   const { t } = useT();
   const [copied, setCopied] = useState(false);
-  const [newIdea, setNewIdea] = useState("");
+  const [newIdea, setNewIdea] = useState('');
 
-  const inviteUrl = typeof window !== "undefined" ? `${window.location.origin}/room/${room.code}` : "";
+  const inviteUrl =
+    typeof window !== 'undefined' ? `${window.location.origin}/room/${room.code}` : '';
 
   const copyLink = async () => {
     await navigator.clipboard.writeText(inviteUrl);
@@ -29,37 +30,39 @@ export function Lobby() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const isPredefined = room.ideas_mode === "predefined";
+  const isPredefined = room.ideas_mode === 'predefined';
 
   const addIdeaMutation = useMutation({
     mutationFn: (title: string) => api.addRoomSuggestion(room.code, title, session.token),
-    onSuccess: () => setNewIdea(""),
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to add"),
+    onSuccess: () => setNewIdea(''),
+    onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed to add'),
   });
 
   const removeIdeaMutation = useMutation({
     mutationFn: (id: string) => api.deleteRoomSuggestion(room.code, id, session.token),
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to remove"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed to remove'),
   });
 
   const startRoomMutation = useMutation({
     mutationFn: (phase: string) => api.advancePhase(room.code, phase, session.token),
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to start"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed to start'),
   });
 
   return (
-    <div className='flex flex-col px-6 pt-16 pb-8 gap-8'>
+    <div className="flex flex-col gap-8 px-6 pt-16 pb-8">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className='text-center'
+        className="text-center"
       >
-        <p className='text-white/50 text-sm uppercase tracking-widest mb-2'>{t.roomLabel}</p>
-        <h1 className='text-white font-black text-4xl'>{room.topic}</h1>
-        <div className='flex items-center justify-center gap-2 mt-3'>
-          <span className='text-white/40 text-xs'>{t.codeLabel}</span>
-          <span className='font-mono text-white font-bold tracking-widest text-lg'>{room.code}</span>
+        <p className="mb-2 text-sm tracking-widest text-white/50 uppercase">{t.roomLabel}</p>
+        <h1 className="text-4xl font-black text-white">{room.topic}</h1>
+        <div className="mt-3 flex items-center justify-center gap-2">
+          <span className="text-xs text-white/40">{t.codeLabel}</span>
+          <span className="font-mono text-lg font-bold tracking-widest text-white">
+            {room.code}
+          </span>
         </div>
       </motion.div>
 
@@ -68,40 +71,33 @@ export function Lobby() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className=''
+        className=""
       >
-        <div className='flex items-center gap-2 mb-4'>
-          <Users
-            size={16}
-            className='text-white/50'
-          />
-          <span className='text-white/50 text-sm uppercase tracking-widest'>{t.waitingForFriends}</span>
+        <div className="mb-4 flex items-center gap-2">
+          <Users size={16} className="text-white/50" />
+          <span className="text-sm tracking-widest text-white/50 uppercase">
+            {t.waitingForFriends}
+          </span>
         </div>
 
-        <div className='space-y-3'>
+        <div className="space-y-3">
           {participants.map((p, i) => (
             <motion.div
               key={p.id}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.05 }}
-              className='flex items-center gap-3 bg-white/5 rounded-2xl px-4 py-3'
+              className="flex items-center gap-3 rounded-2xl bg-white/5 px-4 py-3"
             >
-              <div className='w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center text-white font-bold text-sm flex-shrink-0'>
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-purple-700 text-sm font-bold text-white">
                 {p.name[0].toUpperCase()}
               </div>
-              <span className='text-white font-medium'>{p.name}</span>
+              <span className="font-medium text-white">{p.name}</span>
               {p.session_token === room.host_session_token && (
-                <Crown
-                  size={14}
-                  className='text-amber-400 ml-auto flex-shrink-0'
-                />
+                <Crown size={14} className="ml-auto flex-shrink-0 text-amber-400" />
               )}
               {p.id === session.participantId && (
-                <Badge
-                  variant='outline'
-                  className='ml-auto text-white/50 border-white/20 text-xs'
-                >
+                <Badge variant="outline" className="ml-auto border-white/20 text-xs text-white/50">
                   {t.youBadge}
                 </Badge>
               )}
@@ -116,18 +112,17 @@ export function Lobby() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className='space-y-3'
+          className="space-y-3"
         >
-          <div className='flex items-center gap-2'>
-            <Lightbulb
-              size={16}
-              className='text-white/50'
-            />
-            <span className='text-white/50 text-sm uppercase tracking-widest'>{t.predefinedIdeasPreview}</span>
-            <span className='text-white/30 text-xs ml-auto'>{suggestions.length}/20</span>
+          <div className="flex items-center gap-2">
+            <Lightbulb size={16} className="text-white/50" />
+            <span className="text-sm tracking-widest text-white/50 uppercase">
+              {t.predefinedIdeasPreview}
+            </span>
+            <span className="ml-auto text-xs text-white/30">{suggestions.length}/20</span>
           </div>
 
-          <div className='space-y-2'>
+          <div className="space-y-2">
             <AnimatePresence initial={false}>
               {suggestions.map((s) => (
                 <motion.div
@@ -135,14 +130,14 @@ export function Lobby() {
                   initial={{ opacity: 0, x: -16 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 16, transition: { duration: 0.15 } }}
-                  className='flex items-center gap-2 bg-white/5 rounded-xl px-4 py-2.5'
+                  className="flex items-center gap-2 rounded-xl bg-white/5 px-4 py-2.5"
                 >
-                  <span className='flex-1 text-white/80 text-sm'>{s.title}</span>
+                  <span className="flex-1 text-sm text-white/80">{s.title}</span>
                   {isHost && (
                     <button
                       onClick={() => removeIdeaMutation.mutate(s.id)}
                       disabled={removeIdeaMutation.isPending}
-                      className='text-white/25 hover:text-red-400 transition-colors p-1 flex-shrink-0 disabled:opacity-40'
+                      className="flex-shrink-0 p-1 text-white/25 transition-colors hover:text-red-400 disabled:opacity-40"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -151,25 +146,32 @@ export function Lobby() {
               ))}
             </AnimatePresence>
             {suggestions.length === 0 && (
-              <p className='text-white/25 text-sm text-center py-2'>{t.predefinedIdeaPlaceholder}</p>
+              <p className="py-2 text-center text-sm text-white/25">
+                {t.predefinedIdeaPlaceholder}
+              </p>
             )}
           </div>
 
           {isHost && suggestions.length < 20 && (
             <>
-              <div className='flex gap-2'>
+              <div className="flex gap-2">
                 <Input
                   value={newIdea}
                   onChange={(e) => setNewIdea(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && newIdea.trim() && !addIdeaMutation.isPending && addIdeaMutation.mutate(newIdea.trim())}
+                  onKeyDown={(e) =>
+                    e.key === 'Enter' &&
+                    newIdea.trim() &&
+                    !addIdeaMutation.isPending &&
+                    addIdeaMutation.mutate(newIdea.trim())
+                  }
                   placeholder={t.predefinedIdeaPlaceholder}
-                  className='bg-white/10 border-white/20 text-white placeholder:text-white/30 rounded-xl flex-1'
+                  className="flex-1 rounded-xl border-white/20 bg-white/10 text-white placeholder:text-white/30"
                   maxLength={60}
                 />
                 <button
                   onClick={() => newIdea.trim() && addIdeaMutation.mutate(newIdea.trim())}
                   disabled={addIdeaMutation.isPending || !newIdea.trim()}
-                  className='bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white rounded-xl px-3 transition-colors'
+                  className="rounded-xl bg-violet-600 px-3 text-white transition-colors hover:bg-violet-500 disabled:opacity-40"
                 >
                   <Plus size={18} />
                 </button>
@@ -189,38 +191,32 @@ export function Lobby() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className='space-y-3'
+        className="space-y-3"
       >
         <button
           onClick={copyLink}
           disabled={copied}
-          className='w-full flex items-center gap-3 bg-white/10 hover:bg-white/15 rounded-2xl px-5 py-4 text-white transition-all'
+          className="flex w-full items-center gap-3 rounded-2xl bg-white/10 px-5 py-4 text-white transition-all hover:bg-white/15"
         >
           {copied ? (
-            <Check
-              size={18}
-              className='text-green-400'
-            />
+            <Check size={18} className="text-green-400" />
           ) : (
-            <Copy
-              size={18}
-              className='text-white/60'
-            />
+            <Copy size={18} className="text-white/60" />
           )}
-          <span className='flex-1 text-left text-sm font-medium truncate'>{inviteUrl}</span>
+          <span className="flex-1 truncate text-left text-sm font-medium">{inviteUrl}</span>
         </button>
 
         {isHost ? (
           <>
             <Button
-              onClick={() => startRoomMutation.mutate(isPredefined ? "voting" : "submitting")}
+              onClick={() => startRoomMutation.mutate(isPredefined ? 'voting' : 'submitting')}
               disabled={startRoomMutation.isPending || participants.length < 1}
-              className='w-full h-14 text-base font-bold rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0 text-white'
+              className="h-14 w-full rounded-2xl border-0 bg-gradient-to-r from-violet-600 to-purple-600 text-base font-bold text-white hover:from-violet-500 hover:to-purple-500"
             >
               {startRoomMutation.isPending ? (
                 t.startingLabel
               ) : (
-                <span className='flex items-center gap-2'>
+                <span className="flex items-center gap-2">
                   {isPredefined ? t.startVoting : t.startEveryoneAdd} <ArrowRight size={18} />
                 </span>
               )}
@@ -228,7 +224,7 @@ export function Lobby() {
             {isPredefined && <SpinWheelButton />}
           </>
         ) : (
-          <div className='text-center text-white/40 text-sm py-2'>{t.waitingForHost}</div>
+          <div className="py-2 text-center text-sm text-white/40">{t.waitingForHost}</div>
         )}
       </motion.div>
     </div>

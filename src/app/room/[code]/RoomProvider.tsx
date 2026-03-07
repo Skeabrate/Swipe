@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useReducer, useCallback } from 'react';
 import { getSupabaseClient } from '@/lib/supabase';
-import { Room, Participant, Suggestion, Vote, TiebreakerPick, LocalSession } from '@/types';
+import { LocalSession, Participant, Room, Suggestion, TiebreakerPick, Vote } from '@/types';
+import { useEffect, useReducer } from 'react';
 import { RoomContext } from './RoomContext';
 
 interface State {
@@ -29,33 +29,33 @@ function reducer(state: State, action: Action): State {
     case 'UPSERT_PARTICIPANT':
       return {
         ...state,
-        participants: state.participants.some(p => p.id === action.participant.id)
-          ? state.participants.map(p => p.id === action.participant.id ? action.participant : p)
+        participants: state.participants.some((p) => p.id === action.participant.id)
+          ? state.participants.map((p) => (p.id === action.participant.id ? action.participant : p))
           : [...state.participants, action.participant],
       };
     case 'REMOVE_PARTICIPANT':
-      return { ...state, participants: state.participants.filter(p => p.id !== action.id) };
+      return { ...state, participants: state.participants.filter((p) => p.id !== action.id) };
     case 'ADD_SUGGESTION':
       return {
         ...state,
-        suggestions: state.suggestions.some(s => s.id === action.suggestion.id)
+        suggestions: state.suggestions.some((s) => s.id === action.suggestion.id)
           ? state.suggestions
           : [...state.suggestions, action.suggestion],
       };
     case 'REMOVE_SUGGESTION':
-      return { ...state, suggestions: state.suggestions.filter(s => s.id !== action.id) };
+      return { ...state, suggestions: state.suggestions.filter((s) => s.id !== action.id) };
     case 'UPSERT_VOTE':
       return {
         ...state,
-        votes: state.votes.some(v => v.id === action.vote.id)
-          ? state.votes.map(v => v.id === action.vote.id ? action.vote : v)
+        votes: state.votes.some((v) => v.id === action.vote.id)
+          ? state.votes.map((v) => (v.id === action.vote.id ? action.vote : v))
           : [...state.votes, action.vote],
       };
     case 'UPSERT_TIEBREAKER':
       return {
         ...state,
-        tiebreakerPicks: state.tiebreakerPicks.some(t => t.id === action.pick.id)
-          ? state.tiebreakerPicks.map(t => t.id === action.pick.id ? action.pick : t)
+        tiebreakerPicks: state.tiebreakerPicks.some((t) => t.id === action.pick.id)
+          ? state.tiebreakerPicks.map((t) => (t.id === action.pick.id ? action.pick : t))
           : [...state.tiebreakerPicks, action.pick],
       };
     default:
@@ -78,61 +78,130 @@ export function RoomProvider({ initial, session, children }: Props) {
 
     const channel = supabase
       .channel(`room:${roomId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'rooms', filter: `id=eq.${roomId}` }, payload => {
-        if (payload.new) dispatch({ type: 'SET_ROOM', room: payload.new as Room });
-      })
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'participants', filter: `room_id=eq.${roomId}` }, payload => {
-        dispatch({ type: 'UPSERT_PARTICIPANT', participant: payload.new as Participant });
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'participants', filter: `room_id=eq.${roomId}` }, payload => {
-        dispatch({ type: 'UPSERT_PARTICIPANT', participant: payload.new as Participant });
-      })
-      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'participants', filter: `room_id=eq.${roomId}` }, payload => {
-        dispatch({ type: 'REMOVE_PARTICIPANT', id: (payload.old as Participant).id });
-      })
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'suggestions', filter: `room_id=eq.${roomId}` }, payload => {
-        // Suggestion may lack participant join – enrich client-side
-        const s = payload.new as Suggestion;
-        const participant = state.participants.find(p => p.id === s.participant_id);
-        dispatch({ type: 'ADD_SUGGESTION', suggestion: { ...s, participant } });
-      })
-      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'suggestions', filter: `room_id=eq.${roomId}` }, payload => {
-        dispatch({ type: 'REMOVE_SUGGESTION', id: (payload.old as Suggestion).id });
-      })
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'votes', filter: `room_id=eq.${roomId}` }, payload => {
-        dispatch({ type: 'UPSERT_VOTE', vote: payload.new as Vote });
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'votes', filter: `room_id=eq.${roomId}` }, payload => {
-        dispatch({ type: 'UPSERT_VOTE', vote: payload.new as Vote });
-      })
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tiebreaker_picks', filter: `room_id=eq.${roomId}` }, payload => {
-        dispatch({ type: 'UPSERT_TIEBREAKER', pick: payload.new as TiebreakerPick });
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tiebreaker_picks', filter: `room_id=eq.${roomId}` }, payload => {
-        dispatch({ type: 'UPSERT_TIEBREAKER', pick: payload.new as TiebreakerPick });
-      })
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'rooms', filter: `id=eq.${roomId}` },
+        (payload) => {
+          if (payload.new) dispatch({ type: 'SET_ROOM', room: payload.new as Room });
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'participants',
+          filter: `room_id=eq.${roomId}`,
+        },
+        (payload) => {
+          dispatch({ type: 'UPSERT_PARTICIPANT', participant: payload.new as Participant });
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'participants',
+          filter: `room_id=eq.${roomId}`,
+        },
+        (payload) => {
+          dispatch({ type: 'UPSERT_PARTICIPANT', participant: payload.new as Participant });
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'participants',
+          filter: `room_id=eq.${roomId}`,
+        },
+        (payload) => {
+          dispatch({ type: 'REMOVE_PARTICIPANT', id: (payload.old as Participant).id });
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'suggestions', filter: `room_id=eq.${roomId}` },
+        (payload) => {
+          // Suggestion may lack participant join – enrich client-side
+          const s = payload.new as Suggestion;
+          const participant = state.participants.find((p) => p.id === s.participant_id);
+          dispatch({ type: 'ADD_SUGGESTION', suggestion: { ...s, participant } });
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'suggestions', filter: `room_id=eq.${roomId}` },
+        (payload) => {
+          dispatch({ type: 'REMOVE_SUGGESTION', id: (payload.old as Suggestion).id });
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'votes', filter: `room_id=eq.${roomId}` },
+        (payload) => {
+          dispatch({ type: 'UPSERT_VOTE', vote: payload.new as Vote });
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'votes', filter: `room_id=eq.${roomId}` },
+        (payload) => {
+          dispatch({ type: 'UPSERT_VOTE', vote: payload.new as Vote });
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'tiebreaker_picks',
+          filter: `room_id=eq.${roomId}`,
+        },
+        (payload) => {
+          dispatch({ type: 'UPSERT_TIEBREAKER', pick: payload.new as TiebreakerPick });
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'tiebreaker_picks',
+          filter: `room_id=eq.${roomId}`,
+        },
+        (payload) => {
+          dispatch({ type: 'UPSERT_TIEBREAKER', pick: payload.new as TiebreakerPick });
+        },
+      )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initial.room.id]);
 
   const isHost = state.room.host_session_token === session.token;
-  const myVotes = state.votes.filter(v => v.participant_id === session.participantId);
-  const myPick = state.tiebreakerPicks.find(t => t.participant_id === session.participantId);
+  const myVotes = state.votes.filter((v) => v.participant_id === session.participantId);
+  const myPick = state.tiebreakerPicks.find((t) => t.participant_id === session.participantId);
 
   return (
-    <RoomContext.Provider value={{
-      room: state.room,
-      participants: state.participants,
-      suggestions: state.suggestions,
-      votes: state.votes,
-      tiebreakerPicks: state.tiebreakerPicks,
-      session,
-      isHost,
-      myVotes,
-      myPick,
-    }}>
+    <RoomContext.Provider
+      value={{
+        room: state.room,
+        participants: state.participants,
+        suggestions: state.suggestions,
+        votes: state.votes,
+        tiebreakerPicks: state.tiebreakerPicks,
+        session,
+        isHost,
+        myVotes,
+        myPick,
+      }}
+    >
       {children}
     </RoomContext.Provider>
   );

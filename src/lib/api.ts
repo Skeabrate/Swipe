@@ -1,5 +1,8 @@
 export class ApiError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(
+    public status: number,
+    message: string,
+  ) {
     super(message);
     this.name = 'ApiError';
   }
@@ -86,14 +89,12 @@ export interface JoinRoomResponse {
 
 // ─── User API ─────────────────────────────────────────────────────────────────
 
-export const fetchUserProfile = () =>
-  apiFetch<UserProfile>('/api/user/profile');
+export const fetchUserProfile = () => apiFetch<UserProfile>('/api/user/profile');
 
 export const updateUserProfile = (data: UserProfile) =>
   apiFetch<UserProfile>('/api/user/profile', { method: 'PUT', ...json(data) });
 
-export const fetchCategories = () =>
-  apiFetch<Category[]>('/api/user/categories');
+export const fetchCategories = () => apiFetch<Category[]>('/api/user/categories');
 
 export const createCategory = (name: string, color: string) =>
   apiFetch<Category>('/api/user/categories', { method: 'POST', ...json({ name, color }) });
@@ -101,23 +102,28 @@ export const createCategory = (name: string, color: string) =>
 export const deleteCategory = (id: string) =>
   apiFetch<void>(`/api/user/categories/${id}`, { method: 'DELETE' });
 
-export const fetchUserIdeas = () =>
-  apiFetch<Idea[]>('/api/user/ideas');
+export const fetchUserIdeas = () => apiFetch<Idea[]>('/api/user/ideas');
 
 export const createUserIdea = (title: string, categoryId: string | null, sourceRoomCode?: string) =>
   apiFetch<Idea>('/api/user/ideas', {
     method: 'POST',
-    ...json({ title, category_id: categoryId, ...(sourceRoomCode ? { source_room_code: sourceRoomCode } : {}) }),
+    ...json({
+      title,
+      category_id: categoryId,
+      ...(sourceRoomCode ? { source_room_code: sourceRoomCode } : {}),
+    }),
   });
 
 export const deleteUserIdea = (id: string) =>
   apiFetch<void>(`/api/user/ideas/${id}`, { method: 'DELETE' });
 
 export const moveUserIdea = (id: string, categoryId: string) =>
-  apiFetch<void>(`/api/user/ideas/${id}`, { method: 'PATCH', ...json({ category_id: categoryId }) });
+  apiFetch<void>(`/api/user/ideas/${id}`, {
+    method: 'PATCH',
+    ...json({ category_id: categoryId }),
+  });
 
-export const fetchUserRooms = () =>
-  apiFetch<RoomHistory[]>('/api/user/rooms');
+export const fetchUserRooms = () => apiFetch<RoomHistory[]>('/api/user/rooms');
 
 // ─── Room API ─────────────────────────────────────────────────────────────────
 

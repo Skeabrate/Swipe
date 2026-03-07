@@ -19,7 +19,10 @@ export async function POST(req: NextRequest) {
   for (let attempt = 0; attempt < 10; attempt++) {
     const candidate = generateRoomCode();
     const { data } = await db.from('rooms').select('id').eq('code', candidate).single();
-    if (!data) { code = candidate; break; }
+    if (!data) {
+      code = candidate;
+      break;
+    }
   }
   if (!code) return NextResponse.json({ error: 'Failed to generate room code' }, { status: 500 });
 
@@ -45,7 +48,12 @@ export async function POST(req: NextRequest) {
   // Create host participant
   const { data: participant, error: partErr } = await db
     .from('participants')
-    .insert({ room_id: room.id, name: name.trim(), session_token: sessionToken, ...(userId ? { clerk_user_id: userId } : {}) })
+    .insert({
+      room_id: room.id,
+      name: name.trim(),
+      session_token: sessionToken,
+      ...(userId ? { clerk_user_id: userId } : {}),
+    })
     .select()
     .single();
 
@@ -57,11 +65,16 @@ export async function POST(req: NextRequest) {
   if (ideasMode === 'predefined' && Array.isArray(predefinedIdeas) && predefinedIdeas.length > 0) {
     const rows = predefinedIdeas
       .slice(0, 20)
-      .map((title: string) => ({ room_id: room.id, participant_id: participant.id, title: title.trim() }))
-      .filter(r => r.title.length > 0);
+      .map((title: string) => ({
+        room_id: room.id,
+        participant_id: participant.id,
+        title: title.trim(),
+      }))
+      .filter((r) => r.title.length > 0);
     if (rows.length > 0) {
       const { error: sugErr } = await db.from('suggestions').insert(rows);
-      if (sugErr) return NextResponse.json({ error: 'Failed to insert predefined ideas' }, { status: 500 });
+      if (sugErr)
+        return NextResponse.json({ error: 'Failed to insert predefined ideas' }, { status: 500 });
     }
   }
 

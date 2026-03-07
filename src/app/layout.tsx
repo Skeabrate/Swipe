@@ -30,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <ClerkProvider>
       <html lang="en" className="h-full">
-        <body className={`${geist.variable} font-sans antialiased h-full bg-[#0a0a0f] text-white`}>
+        <body className={`${geist.variable} h-full bg-[#0a0a0f] font-sans text-white antialiased`}>
           <Providers>
             {children}
             <Toaster theme="dark" position="top-center" richColors />

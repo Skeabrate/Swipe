@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ code: string }> }
-) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
   const { name } = await req.json();
   const { userId } = await auth();
@@ -29,7 +26,7 @@ export async function POST(
   if (room.phase !== 'lobby') {
     return NextResponse.json(
       { error: 'This room has already started. You can no longer join.' },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -37,7 +34,12 @@ export async function POST(
 
   const { data: participant, error: partErr } = await db
     .from('participants')
-    .insert({ room_id: room.id, name: name.trim(), session_token: sessionToken, ...(userId ? { clerk_user_id: userId } : {}) })
+    .insert({
+      room_id: room.id,
+      name: name.trim(),
+      session_token: sessionToken,
+      ...(userId ? { clerk_user_id: userId } : {}),
+    })
     .select()
     .single();
 

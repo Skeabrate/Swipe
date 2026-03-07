@@ -7,13 +7,11 @@ export async function GET() {
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const db = getSupabaseAdmin();
-  const { data } = await db
-    .from('user_profiles')
-    .select('*')
-    .eq('clerk_user_id', userId)
-    .single();
+  const { data } = await db.from('user_profiles').select('*').eq('clerk_user_id', userId).single();
 
-  return NextResponse.json(data ?? { clerk_user_id: userId, primary_color: '#7c3aed', username: null });
+  return NextResponse.json(
+    data ?? { clerk_user_id: userId, primary_color: '#7c3aed', username: null },
+  );
 }
 
 export async function PUT(req: NextRequest) {
@@ -26,8 +24,13 @@ export async function PUT(req: NextRequest) {
   const { data, error } = await db
     .from('user_profiles')
     .upsert(
-      { clerk_user_id: userId, username: username ?? null, primary_color: primary_color ?? '#7c3aed', updated_at: new Date().toISOString() },
-      { onConflict: 'clerk_user_id' }
+      {
+        clerk_user_id: userId,
+        username: username ?? null,
+        primary_color: primary_color ?? '#7c3aed',
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'clerk_user_id' },
     )
     .select()
     .single();

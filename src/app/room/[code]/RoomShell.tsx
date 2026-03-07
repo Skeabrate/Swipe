@@ -9,8 +9,6 @@ import { Wheel } from './phases/Wheel';
 import { Results } from './phases/Results';
 import { AnimatePresence, motion } from 'framer-motion';
 
-const phaseOrder = ['lobby', 'submitting', 'voting', 'tiebreaker', 'wheel', 'results'];
-
 export function RoomShell() {
   const { room } = useRoom();
 

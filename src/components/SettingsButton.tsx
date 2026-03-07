@@ -19,7 +19,7 @@ export function SettingsButton() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="fixed top-4 right-4 z-40 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white/60 hover:text-white transition-all"
+        className="fixed top-4 right-4 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/60 transition-all hover:bg-white/20 hover:text-white"
         aria-label={t.settingsTitle}
       >
         <Settings size={18} />
@@ -46,27 +46,32 @@ export function SettingsButton() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 8 }}
               transition={{ duration: 0.15 }}
-              className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(320px,calc(100vw-2rem))] bg-[#18181f] border border-white/10 rounded-3xl p-6 shadow-2xl"
+              className="fixed top-1/2 left-1/2 z-50 w-[min(320px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-3xl border border-white/10 bg-[#18181f] p-6 shadow-2xl"
             >
-              <h2 className="text-white font-black text-xl mb-5">{t.settingsTitle}</h2>
+              <h2 className="mb-5 text-xl font-black text-white">{t.settingsTitle}</h2>
 
               <div>
-                <p className="text-white/50 text-xs uppercase tracking-widest mb-3">{t.languageLabel}</p>
+                <p className="mb-3 text-xs tracking-widest text-white/50 uppercase">
+                  {t.languageLabel}
+                </p>
                 <div className="space-y-2">
                   {LANGUAGES.map(({ code, flag, label }) => (
                     <button
                       key={code}
-                      onClick={() => { setLang(code); setOpen(false); }}
-                      className={`w-full flex items-center gap-3 rounded-2xl px-4 py-3 transition-all ${
+                      onClick={() => {
+                        setLang(code);
+                        setOpen(false);
+                      }}
+                      className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 transition-all ${
                         lang === code
-                          ? 'bg-violet-600/40 border border-violet-500/50 text-white'
-                          : 'bg-white/5 hover:bg-white/10 border border-transparent text-white/70'
+                          ? 'border border-violet-500/50 bg-violet-600/40 text-white'
+                          : 'border border-transparent bg-white/5 text-white/70 hover:bg-white/10'
                       }`}
                     >
                       <span className="text-2xl">{flag}</span>
                       <span className="font-medium">{label}</span>
                       {lang === code && (
-                        <span className="ml-auto w-2 h-2 rounded-full bg-violet-400" />
+                        <span className="ml-auto h-2 w-2 rounded-full bg-violet-400" />
                       )}
                     </button>
                   ))}

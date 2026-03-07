@@ -1,47 +1,47 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useRouter } from "next/navigation";
-import { ArrowRight, Loader2, Plus, Users, ChevronLeft, BookOpen, History, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
-import { saveSession } from "@/lib/session";
-import { toast } from "sonner";
-import { useT } from "@/i18n/LanguageContext";
-import { useUser, SignInButton, SignUpButton, UserButton, Show } from "@clerk/nextjs";
-import { SavedIdeasPicker } from "@/components/SavedIdeasPicker";
-import { useMutation } from "@tanstack/react-query";
-import * as api from "@/lib/api";
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import { ArrowRight, Loader2, Plus, Users, ChevronLeft, BookOpen, History, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
+import { saveSession } from '@/lib/session';
+import { toast } from 'sonner';
+import { useT } from '@/i18n/LanguageContext';
+import { useUser, SignInButton, SignUpButton, UserButton, Show } from '@clerk/nextjs';
+import { SavedIdeasPicker } from '@/components/SavedIdeasPicker';
+import { useMutation } from '@tanstack/react-query';
+import * as api from '@/lib/api';
 
-type Mode = "home" | "create" | "join";
+type Mode = 'home' | 'create' | 'join';
 
 export default function Home() {
   const router = useRouter();
   const { t } = useT();
   const { isSignedIn, user } = useUser();
-  const [mode, setMode] = useState<Mode>("home");
+  const [mode, setMode] = useState<Mode>('home');
 
   // Create form
-  const [createName, setCreateName] = useState("");
+  const [createName, setCreateName] = useState('');
   const [useCustomCreateName, setUseCustomCreateName] = useState(false);
-  const [topic, setTopic] = useState("");
+  const [topic, setTopic] = useState('');
   const [maxSuggestions, setMaxSuggestions] = useState(10);
   const [anonymous, setAnonymous] = useState(false);
-  const [ideasMode, setIdeasMode] = useState<"open" | "predefined">("open");
+  const [ideasMode, setIdeasMode] = useState<'open' | 'predefined'>('open');
   const [predefinedIdeas, setPredefinedIdeas] = useState<string[]>([]);
-  const [newIdea, setNewIdea] = useState("");
+  const [newIdea, setNewIdea] = useState('');
 
   // Join form
-  const [roomCode, setRoomCode] = useState("");
+  const [roomCode, setRoomCode] = useState('');
 
   // Auto-fill name when user is signed in
   useEffect(() => {
     if (isSignedIn && user) {
-      const name = [user.firstName, user.lastName].filter(Boolean).join(" ") || user.username || "";
+      const name = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.username || '';
       setCreateName(name);
     }
   }, [isSignedIn, user]);
@@ -65,7 +65,7 @@ export default function Home() {
       });
       router.push(`/room/${data.room.code}`);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to create room"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed to create room'),
   });
 
   const joinRoom = () => {
@@ -75,48 +75,52 @@ export default function Home() {
   };
 
   return (
-    <main className='h-dvh bg-[#0a0a0f] overflow-hidden'>
-      <AnimatePresence mode='wait'>
-        {mode === "home" && (
+    <main className="h-dvh overflow-hidden bg-[#0a0a0f]">
+      <AnimatePresence mode="wait">
+        {mode === 'home' && (
           <motion.div
-            key='home'
+            key="home"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, y: -16 }}
             transition={{ duration: 0.2 }}
-            className='flex flex-col h-full px-6 pb-12 justify-between'
+            className="flex h-full flex-col justify-between px-6 pb-12"
           >
             {/* Auth area — h-10 + pt-4 matches the fixed settings cog position */}
-            <div className='flex justify-center items-center pt-4 h-[56px]'>
-              <Show when='signed-out'>
-                <div className='flex gap-2 items-center'>
-                  <SignInButton mode='modal'>
-                    <button className='text-white/50 hover:text-white text-sm transition-colors px-3 h-10 rounded-lg hover:bg-white/10'>
+            <div className="flex h-[56px] items-center justify-center pt-4">
+              <Show when="signed-out">
+                <div className="flex items-center gap-2">
+                  <SignInButton mode="modal">
+                    <button className="h-10 rounded-lg px-3 text-sm text-white/50 transition-colors hover:bg-white/10 hover:text-white">
                       {t.signIn}
                     </button>
                   </SignInButton>
-                  <SignUpButton mode='modal'>
-                    <button className='text-white text-sm font-medium px-3 h-10 rounded-lg bg-white/10 hover:bg-white/15 transition-colors'>
+                  <SignUpButton mode="modal">
+                    <button className="h-10 rounded-lg bg-white/10 px-3 text-sm font-medium text-white transition-colors hover:bg-white/15">
                       {t.signUp}
                     </button>
                   </SignUpButton>
                 </div>
               </Show>
-              <Show when='signed-in'>
-                <UserButton appearance={{ elements: { avatarBox: "w-10 h-10", userButtonPopoverCard: "mr-2" } }} />
+              <Show when="signed-in">
+                <UserButton
+                  appearance={{
+                    elements: { avatarBox: 'w-10 h-10', userButtonPopoverCard: 'mr-2' },
+                  }}
+                />
               </Show>
             </div>
 
             {/* Logo area */}
-            <div className='flex-1 flex flex-col items-center justify-center gap-6'>
+            <div className="flex flex-1 flex-col items-center justify-center gap-6">
               <motion.div
                 initial={{ scale: 0.85, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.05, type: "spring", stiffness: 260, damping: 20 }}
-                className='text-center'
+                transition={{ delay: 0.05, type: 'spring', stiffness: 260, damping: 20 }}
+                className="text-center"
               >
-                <h1 className='text-white font-black text-7xl tracking-tighter'>Swipe</h1>
-                <p className='text-white/40 text-base mt-1'>{t.subtitle}</p>
+                <h1 className="text-7xl font-black tracking-tighter text-white">Swipe</h1>
+                <p className="mt-1 text-base text-white/40">{t.subtitle}</p>
               </motion.div>
 
               {/* Decorative card stack */}
@@ -124,12 +128,12 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
-                className='relative w-52 h-36 mt-2'
+                className="relative mt-2 h-36 w-52"
               >
                 {[
-                  { g: "from-rose-500 to-pink-800", r: "-8deg", s: 0.92, z: 1 },
-                  { g: "from-blue-600 to-indigo-800", r: "4deg", s: 0.96, z: 2 },
-                  { g: "from-violet-600 to-purple-800", r: "-1deg", s: 1, z: 3 },
+                  { g: 'from-rose-500 to-pink-800', r: '-8deg', s: 0.92, z: 1 },
+                  { g: 'from-blue-600 to-indigo-800', r: '4deg', s: 0.96, z: 2 },
+                  { g: 'from-violet-600 to-purple-800', r: '-1deg', s: 1, z: 3 },
                 ].map(({ g, r, s, z }, i) => (
                   <div
                     key={i}
@@ -145,36 +149,36 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className='space-y-3'
+              className="space-y-3"
             >
               <Button
-                onClick={() => setMode("create")}
-                className='w-full h-16 text-lg font-bold rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0 text-white gap-3'
+                onClick={() => setMode('create')}
+                className="h-16 w-full gap-3 rounded-2xl border-0 bg-gradient-to-r from-violet-600 to-purple-600 text-lg font-bold text-white hover:from-violet-500 hover:to-purple-500"
               >
                 <Plus size={22} /> {t.createRoom}
               </Button>
               <Button
-                onClick={() => setMode("join")}
-                variant='outline'
-                className='w-full h-16 text-lg font-bold rounded-2xl bg-white/5 hover:bg-white/10 border-white/15 text-white gap-3'
+                onClick={() => setMode('join')}
+                variant="outline"
+                className="h-16 w-full gap-3 rounded-2xl border-white/15 bg-white/5 text-lg font-bold text-white hover:bg-white/10"
               >
                 <Users size={22} /> {t.joinWithCode}
               </Button>
 
               {/* Logged-in quick links */}
-              <Show when='signed-in'>
-                <div className='flex gap-2 pt-1'>
+              <Show when="signed-in">
+                <div className="flex gap-2 pt-1">
                   <Button
-                    onClick={() => router.push("/profile")}
-                    variant='outline'
-                    className='flex-1 h-12 rounded-2xl bg-white/5 hover:bg-white/10 border-white/15 text-white/70 hover:text-white gap-2 text-sm'
+                    onClick={() => router.push('/profile')}
+                    variant="outline"
+                    className="h-12 flex-1 gap-2 rounded-2xl border-white/15 bg-white/5 text-sm text-white/70 hover:bg-white/10 hover:text-white"
                   >
                     <BookOpen size={16} /> {t.myIdeas}
                   </Button>
                   <Button
-                    onClick={() => router.push("/history")}
-                    variant='outline'
-                    className='flex-1 h-12 rounded-2xl bg-white/5 hover:bg-white/10 border-white/15 text-white/70 hover:text-white gap-2 text-sm'
+                    onClick={() => router.push('/history')}
+                    variant="outline"
+                    className="h-12 flex-1 gap-2 rounded-2xl border-white/15 bg-white/5 text-sm text-white/70 hover:bg-white/10 hover:text-white"
                   >
                     <History size={16} /> {t.history}
                   </Button>
@@ -184,62 +188,66 @@ export default function Home() {
           </motion.div>
         )}
 
-        {mode === "create" && (
+        {mode === 'create' && (
           <motion.div
-            key='create'
+            key="create"
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -40 }}
             transition={{ duration: 0.2 }}
-            className='flex flex-col h-full px-6 pt-12 pb-8 gap-6 overflow-auto'
+            className="flex h-full flex-col gap-6 overflow-auto px-6 pt-12 pb-8"
           >
-            <div className='flex items-center gap-3'>
+            <div className="flex items-center gap-3">
               <button
-                onClick={() => setMode("home")}
-                className='text-white/40 hover:text-white transition-colors p-1 -ml-1'
+                onClick={() => setMode('home')}
+                className="-ml-1 p-1 text-white/40 transition-colors hover:text-white"
               >
                 <ChevronLeft size={24} />
               </button>
-              <h2 className='text-white font-black text-2xl'>{t.newRoomHeading}</h2>
+              <h2 className="text-2xl font-black text-white">{t.newRoomHeading}</h2>
             </div>
 
-            <div className='flex-1 space-y-5 overflow-auto pb-1'>
+            <div className="flex-1 space-y-5 overflow-auto pb-1">
               {isSignedIn ? (
-                <div className='space-y-2'>
-                  <Label className='text-white/60 text-sm'>{t.yourName}</Label>
+                <div className="space-y-2">
+                  <Label className="text-sm text-white/60">{t.yourName}</Label>
                   {!useCustomCreateName ? (
-                    <div className='space-y-2'>
-                      <div className='flex items-center gap-3 bg-white/10 border border-white/20 rounded-xl h-13 px-4'>
+                    <div className="space-y-2">
+                      <div className="flex h-13 items-center gap-3 rounded-xl border border-white/20 bg-white/10 px-4">
                         <UserButton
-                          appearance={{ elements: { avatarBox: "w-6 h-6", userButtonPopoverCard: "mr-2" } }}
+                          appearance={{
+                            elements: { avatarBox: 'w-6 h-6', userButtonPopoverCard: 'mr-2' },
+                          }}
                         />
-                        <span className='text-white font-medium'>{createName}</span>
+                        <span className="font-medium text-white">{createName}</span>
                       </div>
                       <button
                         onClick={() => setUseCustomCreateName(true)}
-                        className='text-white/40 text-xs hover:text-white/60 transition-colors'
+                        className="text-xs text-white/40 transition-colors hover:text-white/60"
                       >
                         {t.useCustomName}
                       </button>
                     </div>
                   ) : (
-                    <div className='space-y-2'>
+                    <div className="space-y-2">
                       <Input
                         value={createName}
                         onChange={(e) => setCreateName(e.target.value)}
                         placeholder={t.namePlaceholder}
-                        className='bg-white/10 border-white/20 text-white placeholder:text-white/30 rounded-xl h-13'
+                        className="h-13 rounded-xl border-white/20 bg-white/10 text-white placeholder:text-white/30"
                         maxLength={30}
                         autoFocus
                       />
                       <button
                         onClick={() => {
                           const name =
-                            [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.username || "";
+                            [user?.firstName, user?.lastName].filter(Boolean).join(' ') ||
+                            user?.username ||
+                            '';
                           setCreateName(name);
                           setUseCustomCreateName(false);
                         }}
-                        className='text-white/40 text-xs hover:text-white/60 transition-colors'
+                        className="text-xs text-white/40 transition-colors hover:text-white/60"
                       >
                         {t.useAccountName}
                       </button>
@@ -247,36 +255,36 @@ export default function Home() {
                   )}
                 </div>
               ) : (
-                <div className='space-y-2'>
-                  <Label className='text-white/60 text-sm'>{t.yourName}</Label>
+                <div className="space-y-2">
+                  <Label className="text-sm text-white/60">{t.yourName}</Label>
                   <Input
                     value={createName}
                     onChange={(e) => setCreateName(e.target.value)}
                     placeholder={t.namePlaceholder}
-                    className='bg-white/10 border-white/20 text-white placeholder:text-white/30 rounded-xl h-13'
+                    className="h-13 rounded-xl border-white/20 bg-white/10 text-white placeholder:text-white/30"
                     maxLength={30}
                     autoFocus
                   />
                 </div>
               )}
 
-              <div className='space-y-2'>
-                <Label className='text-white/60 text-sm'>{t.whatDeciding}</Label>
+              <div className="space-y-2">
+                <Label className="text-sm text-white/60">{t.whatDeciding}</Label>
                 <Input
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && createRoomMutation.mutate()}
+                  onKeyDown={(e) => e.key === 'Enter' && createRoomMutation.mutate()}
                   placeholder={t.topicPlaceholder}
-                  className='bg-white/10 border-white/20 text-white placeholder:text-white/30 rounded-xl h-13'
+                  className="h-13 rounded-xl border-white/20 bg-white/10 text-white placeholder:text-white/30"
                   maxLength={60}
                   autoFocus={isSignedIn}
                 />
-                <div className='flex flex-wrap gap-2 pt-1'>
+                <div className="flex flex-wrap gap-2 pt-1">
                   {t.topicChips.map((chip) => (
                     <button
                       key={chip}
                       onClick={() => setTopic(chip)}
-                      className='text-white/40 hover:text-white/80 text-xs bg-white/5 hover:bg-white/10 rounded-full px-3 py-1.5 transition-all border border-white/10'
+                      className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/40 transition-all hover:bg-white/10 hover:text-white/80"
                     >
                       {chip}
                     </button>
@@ -285,31 +293,31 @@ export default function Home() {
               </div>
 
               {/* Ideas mode toggle */}
-              <div className='bg-white/5 rounded-2xl px-4 py-4 space-y-3'>
-                <p className='text-white/70 text-sm'>{t.ideasModeLabel}</p>
-                <div className='flex gap-2'>
-                  {(["open", "predefined"] as const).map((m) => (
+              <div className="space-y-3 rounded-2xl bg-white/5 px-4 py-4">
+                <p className="text-sm text-white/70">{t.ideasModeLabel}</p>
+                <div className="flex gap-2">
+                  {(['open', 'predefined'] as const).map((m) => (
                     <button
                       key={m}
                       onClick={() => setIdeasMode(m)}
                       className={`flex-1 rounded-xl py-2 text-sm font-medium transition-all ${
                         ideasMode === m
-                          ? "bg-violet-600 text-white"
-                          : "bg-white/10 text-white/50 hover:text-white hover:bg-white/15"
+                          ? 'bg-violet-600 text-white'
+                          : 'bg-white/10 text-white/50 hover:bg-white/15 hover:text-white'
                       }`}
                     >
-                      {m === "open" ? t.ideasModeOpen : t.ideasModePredefined}
+                      {m === 'open' ? t.ideasModeOpen : t.ideasModePredefined}
                     </button>
                   ))}
                 </div>
               </div>
 
               {/* Max suggestions slider — only for open mode */}
-              {ideasMode === "open" && (
-                <div className='space-y-3 bg-white/5 rounded-2xl p-4'>
-                  <div className='flex justify-between items-center'>
-                    <Label className='text-white/70 text-sm'>{t.maxSuggestionsLabel}</Label>
-                    <span className='text-white font-bold'>{maxSuggestions}</span>
+              {ideasMode === 'open' && (
+                <div className="space-y-3 rounded-2xl bg-white/5 p-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm text-white/70">{t.maxSuggestionsLabel}</Label>
+                    <span className="font-bold text-white">{maxSuggestions}</span>
                   </div>
                   <Slider
                     value={[maxSuggestions]}
@@ -318,7 +326,7 @@ export default function Home() {
                     max={20}
                     step={1}
                   />
-                  <div className='flex justify-between text-white/25 text-xs'>
+                  <div className="flex justify-between text-xs text-white/25">
                     <span>1</span>
                     <span>20</span>
                   </div>
@@ -326,36 +334,36 @@ export default function Home() {
               )}
 
               {/* Predefined ideas list */}
-              {ideasMode === "predefined" && (
-                <div className='bg-white/5 rounded-2xl p-4 space-y-3'>
-                  <p className='text-white/70 text-sm'>
+              {ideasMode === 'predefined' && (
+                <div className="space-y-3 rounded-2xl bg-white/5 p-4">
+                  <p className="text-sm text-white/70">
                     {t.predefinedIdeasLabel} ({predefinedIdeas.length}/20)
                   </p>
 
                   {/* Text input row */}
-                  <div className='flex gap-2'>
+                  <div className="flex gap-2">
                     <Input
                       value={newIdea}
                       onChange={(e) => setNewIdea(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter" && newIdea.trim() && predefinedIdeas.length < 20) {
+                        if (e.key === 'Enter' && newIdea.trim() && predefinedIdeas.length < 20) {
                           setPredefinedIdeas((prev) => [...prev, newIdea.trim()]);
-                          setNewIdea("");
+                          setNewIdea('');
                         }
                       }}
                       placeholder={t.predefinedIdeaPlaceholder}
-                      className='bg-white/10 border-white/20 text-white placeholder:text-white/30 rounded-xl flex-1'
+                      className="flex-1 rounded-xl border-white/20 bg-white/10 text-white placeholder:text-white/30"
                       maxLength={60}
                     />
                     <button
                       onClick={() => {
                         if (newIdea.trim() && predefinedIdeas.length < 20) {
                           setPredefinedIdeas((prev) => [...prev, newIdea.trim()]);
-                          setNewIdea("");
+                          setNewIdea('');
                         }
                       }}
                       disabled={!newIdea.trim() || predefinedIdeas.length >= 20}
-                      className='bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white rounded-xl px-3 transition-colors'
+                      className="rounded-xl bg-violet-600 px-3 text-white transition-colors hover:bg-violet-500 disabled:opacity-40"
                     >
                       <Plus size={18} />
                     </button>
@@ -372,16 +380,18 @@ export default function Home() {
 
                   {/* Added ideas list */}
                   {predefinedIdeas.length > 0 && (
-                    <div className='space-y-2 max-h-40 overflow-auto'>
+                    <div className="max-h-40 space-y-2 overflow-auto">
                       {predefinedIdeas.map((idea, i) => (
                         <div
                           key={i}
-                          className='flex items-center gap-2 bg-white/5 rounded-xl px-3 py-2'
+                          className="flex items-center gap-2 rounded-xl bg-white/5 px-3 py-2"
                         >
-                          <span className='flex-1 text-white text-sm truncate'>{idea}</span>
+                          <span className="flex-1 truncate text-sm text-white">{idea}</span>
                           <button
-                            onClick={() => setPredefinedIdeas((prev) => prev.filter((_, idx) => idx !== i))}
-                            className='text-white/30 hover:text-white/80 transition-colors flex-shrink-0'
+                            onClick={() =>
+                              setPredefinedIdeas((prev) => prev.filter((_, idx) => idx !== i))
+                            }
+                            className="flex-shrink-0 text-white/30 transition-colors hover:text-white/80"
                           >
                             <X size={14} />
                           </button>
@@ -392,15 +402,12 @@ export default function Home() {
                 </div>
               )}
 
-              <div className='flex items-center justify-between bg-white/5 rounded-2xl px-4 py-4'>
+              <div className="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-4">
                 <div>
-                  <p className='text-white font-medium text-sm'>{t.anonymousVoting}</p>
-                  <p className='text-white/40 text-xs mt-0.5'>{t.anonymousVotingDesc}</p>
+                  <p className="text-sm font-medium text-white">{t.anonymousVoting}</p>
+                  <p className="mt-0.5 text-xs text-white/40">{t.anonymousVotingDesc}</p>
                 </div>
-                <Switch
-                  checked={anonymous}
-                  onCheckedChange={setAnonymous}
-                />
+                <Switch checked={anonymous} onCheckedChange={setAnonymous} />
               </div>
             </div>
 
@@ -410,17 +417,14 @@ export default function Home() {
                 createRoomMutation.isPending ||
                 !createName.trim() ||
                 !topic.trim() ||
-                (ideasMode === "predefined" && predefinedIdeas.length === 0)
+                (ideasMode === 'predefined' && predefinedIdeas.length === 0)
               }
-              className='w-full h-14 text-base font-bold rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0 text-white flex-shrink-0'
+              className="h-14 w-full flex-shrink-0 rounded-2xl border-0 bg-gradient-to-r from-violet-600 to-purple-600 text-base font-bold text-white hover:from-violet-500 hover:to-purple-500"
             >
               {createRoomMutation.isPending ? (
-                <Loader2
-                  size={20}
-                  className='animate-spin'
-                />
+                <Loader2 size={20} className="animate-spin" />
               ) : (
-                <span className='flex items-center gap-2'>
+                <span className="flex items-center gap-2">
                   {t.createRoomBtn} <ArrowRight size={18} />
                 </span>
               )}
@@ -428,47 +432,47 @@ export default function Home() {
           </motion.div>
         )}
 
-        {mode === "join" && (
+        {mode === 'join' && (
           <motion.div
-            key='join'
+            key="join"
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -40 }}
             transition={{ duration: 0.2 }}
-            className='flex flex-col h-full px-6 pt-12 pb-8 justify-between'
+            className="flex h-full flex-col justify-between px-6 pt-12 pb-8"
           >
-            <div className='space-y-8'>
-              <div className='flex items-center gap-3'>
+            <div className="space-y-8">
+              <div className="flex items-center gap-3">
                 <button
-                  onClick={() => setMode("home")}
-                  className='text-white/40 hover:text-white transition-colors p-1 -ml-1'
+                  onClick={() => setMode('home')}
+                  className="-ml-1 p-1 text-white/40 transition-colors hover:text-white"
                 >
                   <ChevronLeft size={24} />
                 </button>
-                <h2 className='text-white font-black text-2xl'>{t.joinARoomHeading}</h2>
+                <h2 className="text-2xl font-black text-white">{t.joinARoomHeading}</h2>
               </div>
 
-              <div className='space-y-3'>
-                <Label className='text-white/60 text-sm'>{t.roomCodeLabel}</Label>
+              <div className="space-y-3">
+                <Label className="text-sm text-white/60">{t.roomCodeLabel}</Label>
                 <Input
                   value={roomCode}
                   onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                  onKeyDown={(e) => e.key === "Enter" && joinRoom()}
-                  placeholder='ABC123'
-                  className='bg-white/10 border-white/20 text-white placeholder:text-white/30 rounded-xl h-16 font-mono text-2xl tracking-[0.3em] text-center'
+                  onKeyDown={(e) => e.key === 'Enter' && joinRoom()}
+                  placeholder="ABC123"
+                  className="h-16 rounded-xl border-white/20 bg-white/10 text-center font-mono text-2xl tracking-[0.3em] text-white placeholder:text-white/30"
                   maxLength={6}
                   autoFocus
                 />
-                <p className='text-white/30 text-xs text-center'>{t.roomCodeHint}</p>
+                <p className="text-center text-xs text-white/30">{t.roomCodeHint}</p>
               </div>
             </div>
 
             <Button
               onClick={joinRoom}
               disabled={roomCode.trim().length < 6}
-              className='w-full h-14 text-base font-bold rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 border-0 text-white'
+              className="h-14 w-full rounded-2xl border-0 bg-gradient-to-r from-violet-600 to-purple-600 text-base font-bold text-white hover:from-violet-500 hover:to-purple-500"
             >
-              <span className='flex items-center gap-2'>
+              <span className="flex items-center gap-2">
                 {t.findRoom} <ArrowRight size={18} />
               </span>
             </Button>

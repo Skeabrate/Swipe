@@ -10,24 +10,28 @@ export default async function RoomPage({ params }: Props) {
   const { code } = await params;
   const db = getSupabaseAdmin();
 
-  const { data: room } = await db
-    .from('rooms')
-    .select('*')
-    .eq('code', code.toUpperCase())
-    .single();
+  const { data: room } = await db.from('rooms').select('*').eq('code', code.toUpperCase()).single();
 
   if (!room) notFound();
 
-  const [{ data: participants }, { data: suggestions }, { data: votes }, { data: tiebreakerPicks }] =
-    await Promise.all([
-      db.from('participants').select('*').eq('room_id', room.id).order('created_at'),
-      db.from('suggestions').select('*, participant:participants(id,name)').eq('room_id', room.id).order('created_at'),
-      db.from('votes').select('*').eq('room_id', room.id),
-      db.from('tiebreaker_picks').select('*').eq('room_id', room.id),
-    ]);
+  const [
+    { data: participants },
+    { data: suggestions },
+    { data: votes },
+    { data: tiebreakerPicks },
+  ] = await Promise.all([
+    db.from('participants').select('*').eq('room_id', room.id).order('created_at'),
+    db
+      .from('suggestions')
+      .select('*, participant:participants(id,name)')
+      .eq('room_id', room.id)
+      .order('created_at'),
+    db.from('votes').select('*').eq('room_id', room.id),
+    db.from('tiebreaker_picks').select('*').eq('room_id', room.id),
+  ]);
 
   return (
-    <main className="min-h-dvh bg-[#0a0a0f] overflow-auto">
+    <main className="min-h-dvh overflow-auto bg-[#0a0a0f]">
       <SessionLoader
         initialData={{
           room,

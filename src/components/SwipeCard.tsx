@@ -78,19 +78,21 @@ export function SwipeCard({ suggestion, index, stackIndex, anonymous, onSwipe }:
       className="absolute inset-0 touch-none select-none"
     >
       <div
-        className={`w-full h-full rounded-3xl bg-gradient-to-br ${gradient} flex flex-col items-center justify-center p-8 shadow-2xl relative overflow-hidden`}
+        className={`h-full w-full rounded-3xl bg-gradient-to-br ${gradient} relative flex flex-col items-center justify-center overflow-hidden p-8 shadow-2xl`}
       >
         {/* Subtle decorative circles */}
-        <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-white/5" />
-        <div className="absolute -bottom-12 -left-12 w-40 h-40 rounded-full bg-white/5" />
+        <div className="absolute -top-16 -right-16 h-48 w-48 rounded-full bg-white/5" />
+        <div className="absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-white/5" />
 
         {/* LIKE badge */}
         {isTop && (
           <motion.div
             style={{ opacity: likeOpacity }}
-            className="absolute top-10 left-8 border-[3px] border-green-400 rounded-2xl px-4 py-2 -rotate-[22deg]"
+            className="absolute top-10 left-8 -rotate-[22deg] rounded-2xl border-[3px] border-green-400 px-4 py-2"
           >
-            <span className="text-green-400 font-black text-2xl uppercase tracking-widest">Like ✓</span>
+            <span className="text-2xl font-black tracking-widest text-green-400 uppercase">
+              Like ✓
+            </span>
           </motion.div>
         )}
 
@@ -98,21 +100,21 @@ export function SwipeCard({ suggestion, index, stackIndex, anonymous, onSwipe }:
         {isTop && (
           <motion.div
             style={{ opacity: nopeOpacity }}
-            className="absolute top-10 right-8 border-[3px] border-red-400 rounded-2xl px-4 py-2 rotate-[22deg]"
+            className="absolute top-10 right-8 rotate-[22deg] rounded-2xl border-[3px] border-red-400 px-4 py-2"
           >
-            <span className="text-red-400 font-black text-2xl uppercase tracking-widest">Nope ✗</span>
+            <span className="text-2xl font-black tracking-widest text-red-400 uppercase">
+              Nope ✗
+            </span>
           </motion.div>
         )}
 
         {/* Main text */}
-        <p className="text-white font-bold text-3xl text-center leading-tight z-10 drop-shadow-lg">
+        <p className="z-10 text-center text-3xl leading-tight font-bold text-white drop-shadow-lg">
           {suggestion.title}
         </p>
 
         {!anonymous && suggestion.participant && (
-          <p className="text-white/50 mt-5 text-sm z-10">
-            by {suggestion.participant.name}
-          </p>
+          <p className="z-10 mt-5 text-sm text-white/50">by {suggestion.participant.name}</p>
         )}
       </div>
     </motion.div>
@@ -131,14 +133,14 @@ export function SwipeActionButtons({ onDislike, onLike, disabled }: ActionButton
       <button
         onClick={onDislike}
         disabled={disabled}
-        className="w-16 h-16 rounded-full bg-white/10 border-2 border-red-400/60 flex items-center justify-center text-red-400 transition-all active:scale-90 disabled:opacity-40 hover:bg-red-400/20"
+        className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-red-400/60 bg-white/10 text-red-400 transition-all hover:bg-red-400/20 active:scale-90 disabled:opacity-40"
       >
         <X size={28} strokeWidth={2.5} />
       </button>
       <button
         onClick={onLike}
         disabled={disabled}
-        className="w-16 h-16 rounded-full bg-white/10 border-2 border-green-400/60 flex items-center justify-center text-green-400 transition-all active:scale-90 disabled:opacity-40 hover:bg-green-400/20"
+        className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-green-400/60 bg-white/10 text-green-400 transition-all hover:bg-green-400/20 active:scale-90 disabled:opacity-40"
       >
         <Heart size={28} strokeWidth={2.5} />
       </button>

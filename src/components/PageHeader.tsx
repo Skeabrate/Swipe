@@ -14,11 +14,11 @@ export function PageHeader({ title, backHref = '/' }: PageHeaderProps) {
     <div className="flex items-center gap-3 pt-20 pb-6">
       <button
         onClick={() => router.push(backHref)}
-        className="text-white/40 hover:text-white transition-colors p-1 -ml-1"
+        className="-ml-1 p-1 text-white/40 transition-colors hover:text-white"
       >
         <ChevronLeft size={24} />
       </button>
-      <h1 className="text-white font-black text-2xl">{title}</h1>
+      <h1 className="text-2xl font-black text-white">{title}</h1>
     </div>
   );
 }

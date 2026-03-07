@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 
-async function getParticipant(db: ReturnType<typeof import('@/lib/supabaseAdmin').getSupabaseAdmin>, token: string | null, roomId: string) {
+async function getParticipant(
+  db: ReturnType<typeof import('@/lib/supabaseAdmin').getSupabaseAdmin>,
+  token: string | null,
+  roomId: string,
+) {
   if (!token) return null;
   const { data } = await db
     .from('participants')
@@ -12,10 +16,7 @@ async function getParticipant(db: ReturnType<typeof import('@/lib/supabaseAdmin'
   return data;
 }
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ code: string }> }
-) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
   const token = req.headers.get('authorization')?.replace('Bearer ', '') ?? null;
   const { title } = await req.json();
@@ -36,10 +37,16 @@ export async function POST(
   if (!isLobbyPredefined && room.phase !== 'submitting')
     return NextResponse.json({ error: 'Submissions are closed' }, { status: 400 });
   if (isLobbyPredefined && room.host_session_token !== token)
-    return NextResponse.json({ error: 'Only the host can add ideas in predefined mode' }, { status: 403 });
+    return NextResponse.json(
+      { error: 'Only the host can add ideas in predefined mode' },
+      { status: 403 },
+    );
 
   // Check count — total cap of 20 for predefined, per-person cap for open
-  const countQuery = db.from('suggestions').select('id', { count: 'exact', head: true }).eq('room_id', room.id);
+  const countQuery = db
+    .from('suggestions')
+    .select('id', { count: 'exact', head: true })
+    .eq('room_id', room.id);
   if (!isLobbyPredefined) countQuery.eq('participant_id', participant.id);
   const { count } = await countQuery;
 
@@ -61,10 +68,7 @@ export async function POST(
   return NextResponse.json({ suggestion });
 }
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ code: string }> }
-) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
   const token = req.headers.get('authorization')?.replace('Bearer ', '') ?? null;
   const { suggestionId } = await req.json();
@@ -81,7 +85,10 @@ export async function DELETE(
   if (!isLobbyPredefined && room.phase !== 'submitting')
     return NextResponse.json({ error: 'Submissions are closed' }, { status: 400 });
   if (isLobbyPredefined && room.host_session_token !== token)
-    return NextResponse.json({ error: 'Only the host can remove ideas in predefined mode' }, { status: 403 });
+    return NextResponse.json(
+      { error: 'Only the host can remove ideas in predefined mode' },
+      { status: 403 },
+    );
 
   await db.from('suggestions').delete().eq('id', suggestionId).eq('participant_id', participant.id);
 

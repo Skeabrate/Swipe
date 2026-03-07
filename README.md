@@ -17,17 +17,17 @@ A real-time multiplayer voting app — create a room, add ideas, swipe to vote, 
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 16 (App Router) |
-| Language | TypeScript 5 |
-| Auth | Clerk |
-| Database & Realtime | Supabase (PostgreSQL + Realtime) |
-| State / Data Fetching | TanStack React Query 5 |
-| Styling | Tailwind CSS 4 |
-| UI Components | shadcn/ui (Radix UI) |
-| Animation | Framer Motion |
-| Email | Resend |
+| Layer                 | Technology                       |
+| --------------------- | -------------------------------- |
+| Framework             | Next.js 16 (App Router)          |
+| Language              | TypeScript 5                     |
+| Auth                  | Clerk                            |
+| Database & Realtime   | Supabase (PostgreSQL + Realtime) |
+| State / Data Fetching | TanStack React Query 5           |
+| Styling               | Tailwind CSS 4                   |
+| UI Components         | shadcn/ui (Radix UI)             |
+| Animation             | Framer Motion                    |
+| Email                 | Resend                           |
 
 ## Setup
 
@@ -58,6 +58,7 @@ RESEND_API_KEY=re_...
 ```
 
 **Where to get these:**
+
 - **Supabase** — [supabase.com](https://supabase.com) → Project Settings → API
 - **Clerk** — [clerk.com](https://clerk.com) → API Keys
 - **Resend** — [resend.com](https://resend.com) → API Keys (free tier: 100 emails/day)
@@ -114,9 +115,9 @@ update app_version set released_at = now() where id = 1;
 
 ## Scripts
 
-| Command | Description |
-|---|---|
-| `npm run dev` | Start dev server (Turbopack) |
-| `npm run build` | Production build |
-| `npm run start` | Start production server |
-| `npm run lint` | Run ESLint |
+| Command         | Description                  |
+| --------------- | ---------------------------- |
+| `npm run dev`   | Start dev server (Turbopack) |
+| `npm run build` | Production build             |
+| `npm run start` | Start production server      |
+| `npm run lint`  | Run ESLint                   |

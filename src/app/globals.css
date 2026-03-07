@@ -1,6 +1,6 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -42,13 +42,13 @@
 /* ── Dark theme (app is always dark) ─────────────────────── */
 :root {
   --radius: 0.625rem;
-  --background: oklch(0.09 0 0);       /* #0a0a0f equivalent */
+  --background: oklch(0.09 0 0); /* #0a0a0f equivalent */
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.14 0 0);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.14 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.71 0.2 280);      /* violet-ish */
+  --primary: oklch(0.71 0.2 280); /* violet-ish */
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.22 0 0);
   --secondary-foreground: oklch(0.985 0 0);
@@ -78,7 +78,8 @@
     @apply bg-background text-foreground;
   }
   /* Prevent iOS bounce scroll */
-  html, body {
+  html,
+  body {
     overscroll-behavior: none;
     -webkit-tap-highlight-color: transparent;
   }

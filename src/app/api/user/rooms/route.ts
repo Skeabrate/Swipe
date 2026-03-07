@@ -16,7 +16,7 @@ export async function GET() {
 
   if (partErr) return NextResponse.json({ error: 'Failed to fetch rooms' }, { status: 500 });
 
-  const roomIds = (participantRows ?? []).map(p => p.room_id);
+  const roomIds = (participantRows ?? []).map((p) => p.room_id);
   if (roomIds.length === 0) return NextResponse.json([]);
 
   // Fetch rooms
@@ -30,7 +30,7 @@ export async function GET() {
 
   // For each room, fetch suggestions + votes to determine winner
   const roomsWithDetails = await Promise.all(
-    (rooms ?? []).map(async room => {
+    (rooms ?? []).map(async (room) => {
       const { data: suggestions } = await db
         .from('suggestions')
         .select('id, title')
@@ -46,21 +46,22 @@ export async function GET() {
 
       // Wheel mode — winner is predetermined, scores are irrelevant
       if (room.wheel_winner_id) {
-        const scored = suggestionList.map(s => ({ ...s, score: 0 }));
-        const winner = scored.find(s => s.id === room.wheel_winner_id) ?? null;
+        const scored = suggestionList.map((s) => ({ ...s, score: 0 }));
+        const winner = scored.find((s) => s.id === room.wheel_winner_id) ?? null;
         return { ...room, suggestions: scored, winner };
       }
 
       // Score each suggestion
-      const scored = suggestionList.map(s => ({
+      const scored = suggestionList.map((s) => ({
         ...s,
-        score: voteList.filter(v => v.suggestion_id === s.id && v.liked).length -
-               voteList.filter(v => v.suggestion_id === s.id && !v.liked).length,
+        score:
+          voteList.filter((v) => v.suggestion_id === s.id && v.liked).length -
+          voteList.filter((v) => v.suggestion_id === s.id && !v.liked).length,
       }));
       scored.sort((a, b) => b.score - a.score);
 
       return { ...room, suggestions: scored, winner: scored[0] ?? null };
-    })
+    }),
   );
 
   return NextResponse.json(roomsWithDetails);

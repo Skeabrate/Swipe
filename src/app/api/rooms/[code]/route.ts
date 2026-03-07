@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ code: string }> }
-) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
   const db = getSupabaseAdmin();
 
@@ -30,10 +27,7 @@ export async function GET(
     .eq('room_id', room.id)
     .order('created_at');
 
-  const { data: votes } = await db
-    .from('votes')
-    .select('*')
-    .eq('room_id', room.id);
+  const { data: votes } = await db.from('votes').select('*').eq('room_id', room.id);
 
   const { data: tiebreakerPicks } = await db
     .from('tiebreaker_picks')

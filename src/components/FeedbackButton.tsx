@@ -39,7 +39,7 @@ export function FeedbackButton() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="fixed top-4 right-16 z-40 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white/60 hover:text-white transition-all"
+        className="fixed top-4 right-16 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/60 transition-all hover:bg-white/20 hover:text-white"
         aria-label={t.feedbackAriaLabel}
       >
         <Bug size={18} />
@@ -64,45 +64,51 @@ export function FeedbackButton() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 8 }}
               transition={{ duration: 0.15 }}
-              className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(360px,calc(100vw-2rem))] bg-[#18181f] border border-white/10 rounded-3xl p-6 shadow-2xl"
+              className="fixed top-1/2 left-1/2 z-50 w-[min(360px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-3xl border border-white/10 bg-[#18181f] p-6 shadow-2xl"
             >
-              <h2 className="text-white font-black text-xl mb-5">{t.feedbackTitle}</h2>
+              <h2 className="mb-5 text-xl font-black text-white">{t.feedbackTitle}</h2>
 
               <div className="mb-4">
-                <p className="text-white/50 text-xs uppercase tracking-widest mb-3">{t.feedbackTypeLabel}</p>
+                <p className="mb-3 text-xs tracking-widest text-white/50 uppercase">
+                  {t.feedbackTypeLabel}
+                </p>
                 <div className="space-y-2">
-                  {FEEDBACK_TYPES.map(fbType => (
+                  {FEEDBACK_TYPES.map((fbType) => (
                     <button
                       key={fbType}
                       onClick={() => setType(fbType)}
-                      className={`w-full flex items-center gap-3 rounded-2xl px-4 py-3 transition-all ${
+                      className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 transition-all ${
                         type === fbType
-                          ? 'bg-violet-600/40 border border-violet-500/50 text-white'
-                          : 'bg-white/5 hover:bg-white/10 border border-transparent text-white/70'
+                          ? 'border border-violet-500/50 bg-violet-600/40 text-white'
+                          : 'border border-transparent bg-white/5 text-white/70 hover:bg-white/10'
                       }`}
                     >
                       <span className="font-medium">{t.feedbackTypes[fbType]}</span>
-                      {type === fbType && <span className="ml-auto w-2 h-2 rounded-full bg-violet-400" />}
+                      {type === fbType && (
+                        <span className="ml-auto h-2 w-2 rounded-full bg-violet-400" />
+                      )}
                     </button>
                   ))}
                 </div>
               </div>
 
               <div className="mb-5">
-                <p className="text-white/50 text-xs uppercase tracking-widest mb-3">{t.feedbackMessageLabel}</p>
+                <p className="mb-3 text-xs tracking-widest text-white/50 uppercase">
+                  {t.feedbackMessageLabel}
+                </p>
                 <textarea
                   value={message}
-                  onChange={e => setMessage(e.target.value)}
+                  onChange={(e) => setMessage(e.target.value)}
                   placeholder={t.feedbackMessagePlaceholder}
                   rows={4}
-                  className="w-full bg-white/10 border border-white/20 text-white placeholder:text-white/30 rounded-2xl px-4 py-3 text-sm resize-none focus:outline-none focus:border-violet-500/60 transition-colors"
+                  className="w-full resize-none rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white transition-colors placeholder:text-white/30 focus:border-violet-500/60 focus:outline-none"
                 />
               </div>
 
               <button
                 onClick={handleSubmit}
                 disabled={loading || !message.trim()}
-                className="w-full h-12 rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold flex items-center justify-center transition-all"
+                className="flex h-12 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 font-bold text-white transition-all hover:from-violet-500 hover:to-purple-500 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {loading ? <Loader2 size={18} className="animate-spin" /> : t.feedbackSend}
               </button>

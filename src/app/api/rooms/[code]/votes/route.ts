@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ code: string }> }
-) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
   const token = req.headers.get('authorization')?.replace('Bearer ', '') ?? null;
   const { suggestionId, liked } = await req.json();
@@ -15,7 +12,8 @@ export async function POST(
 
   const { data: room } = await db.from('rooms').select('*').eq('code', code.toUpperCase()).single();
   if (!room) return NextResponse.json({ error: 'Room not found' }, { status: 404 });
-  if (room.phase !== 'voting') return NextResponse.json({ error: 'Not in voting phase' }, { status: 400 });
+  if (room.phase !== 'voting')
+    return NextResponse.json({ error: 'Not in voting phase' }, { status: 400 });
 
   const { data: participant } = await db
     .from('participants')
@@ -27,12 +25,15 @@ export async function POST(
   if (!participant) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   // Upsert vote
-  await db.from('votes').upsert({
-    room_id: room.id,
-    suggestion_id: suggestionId,
-    participant_id: participant.id,
-    liked,
-  }, { onConflict: 'suggestion_id,participant_id' });
+  await db.from('votes').upsert(
+    {
+      room_id: room.id,
+      suggestion_id: suggestionId,
+      participant_id: participant.id,
+      liked,
+    },
+    { onConflict: 'suggestion_id,participant_id' },
+  );
 
   // Check if all participants have voted on all suggestions
   const { data: participants } = await db.from('participants').select('id').eq('room_id', room.id);
@@ -46,7 +47,10 @@ export async function POST(
 
   if ((voteCount ?? 0) >= totalExpected && totalExpected > 0) {
     // Compute scores to decide next phase
-    const { data: allVotes } = await db.from('votes').select('suggestion_id, liked').eq('room_id', room.id);
+    const { data: allVotes } = await db
+      .from('votes')
+      .select('suggestion_id, liked')
+      .eq('room_id', room.id);
 
     const scoreMap: Record<string, number> = {};
     for (const s of suggestions ?? []) scoreMap[s.id] = 0;
@@ -55,7 +59,9 @@ export async function POST(
     }
 
     const maxScore = Math.max(...Object.values(scoreMap));
-    const topIds = Object.entries(scoreMap).filter(([, s]) => s === maxScore).map(([id]) => id);
+    const topIds = Object.entries(scoreMap)
+      .filter(([, s]) => s === maxScore)
+      .map(([id]) => id);
 
     if (topIds.length === 1 || maxScore === 0) {
       // Clear winner or no one liked anything

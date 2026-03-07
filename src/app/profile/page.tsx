@@ -33,8 +33,6 @@ import {
 import { useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 
-const PRESET_COLORS = ['#7c3aed', '#2563eb', '#059669', '#d97706', '#dc2626', '#db2777'];
-
 function SortableIdeaItem({
   idea,
   onDelete,
@@ -44,24 +42,34 @@ function SortableIdeaItem({
   onDelete: () => void;
   isDeleting: boolean;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: idea.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: idea.id,
+  });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.3 : 1,
   };
   return (
-    <li ref={setNodeRef} style={style} className="flex items-center gap-2 px-4 py-2.5 border-b border-white/5 last:border-0">
+    <li
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-2 border-b border-white/5 px-4 py-2.5 last:border-0"
+    >
       <button
         {...listeners}
         {...attributes}
-        className="text-white/20 hover:text-white/50 cursor-grab active:cursor-grabbing touch-none flex-shrink-0"
+        className="flex-shrink-0 cursor-grab touch-none text-white/20 hover:text-white/50 active:cursor-grabbing"
         tabIndex={-1}
       >
         <GripVertical size={14} />
       </button>
-      <span className="flex-1 text-white/80 text-sm">{idea.title}</span>
-      <button onClick={onDelete} disabled={isDeleting} className="text-white/20 hover:text-red-400 transition-colors flex-shrink-0 disabled:opacity-40">
+      <span className="flex-1 text-sm text-white/80">{idea.title}</span>
+      <button
+        onClick={onDelete}
+        disabled={isDeleting}
+        className="flex-shrink-0 text-white/20 transition-colors hover:text-red-400 disabled:opacity-40"
+      >
         <Trash2 size={14} />
       </button>
     </li>
@@ -99,55 +107,76 @@ function DroppableCategory({
   return (
     <div
       ref={setNodeRef}
-      className={`bg-white/5 rounded-2xl overflow-hidden transition-all ${isOver ? 'ring-2 ring-violet-500/60' : ''}`}
+      className={`overflow-hidden rounded-2xl bg-white/5 transition-all ${isOver ? 'ring-2 ring-violet-500/60' : ''}`}
     >
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
-          <span className="text-white font-semibold">{cat.name}</span>
-          <span className="text-white/30 text-sm">({ideas.length})</span>
+          <div
+            className="h-3 w-3 flex-shrink-0 rounded-full"
+            style={{ backgroundColor: cat.color }}
+          />
+          <span className="font-semibold text-white">{cat.name}</span>
+          <span className="text-sm text-white/30">({ideas.length})</span>
         </div>
-        <button onClick={() => onDeleteCategory(cat, ideas.length)} className="text-white/20 hover:text-red-400 transition-colors">
+        <button
+          onClick={() => onDeleteCategory(cat, ideas.length)}
+          className="text-white/20 transition-colors hover:text-red-400"
+        >
           <Trash2 size={15} />
         </button>
       </div>
 
-      <SortableContext items={ideas.map(i => i.id)} strategy={verticalListSortingStrategy}>
+      <SortableContext items={ideas.map((i) => i.id)} strategy={verticalListSortingStrategy}>
         <ul>
-          {ideas.map(idea => (
-            <SortableIdeaItem key={idea.id} idea={idea} onDelete={() => onDeleteIdea(idea.id)} isDeleting={isIdeaDeleting(idea.id)} />
+          {ideas.map((idea) => (
+            <SortableIdeaItem
+              key={idea.id}
+              idea={idea}
+              onDelete={() => onDeleteIdea(idea.id)}
+              isDeleting={isIdeaDeleting(idea.id)}
+            />
           ))}
         </ul>
       </SortableContext>
 
       {ideas.length === 0 && addingIdeaFor !== cat.id && (
-        <div className="px-4 py-3 text-white/20 text-xs italic">Drop ideas here</div>
+        <div className="px-4 py-3 text-xs text-white/20 italic">Drop ideas here</div>
       )}
 
       {addingIdeaFor === cat.id ? (
-        <div className="flex gap-2 p-3 border-t border-white/10">
+        <div className="flex gap-2 border-t border-white/10 p-3">
           <Input
             value={newIdeaTitle}
-            onChange={e => setNewIdeaTitle(e.target.value)}
-            onKeyDown={e => {
+            onChange={(e) => setNewIdeaTitle(e.target.value)}
+            onKeyDown={(e) => {
               if (e.key === 'Enter' && !isAddingIdea) onAddIdea(cat.id);
               if (e.key === 'Escape') setAddingIdeaFor(null);
             }}
             placeholder={t.newIdeaPlaceholder}
-            className="bg-white/10 border-white/20 text-white placeholder:text-white/30 rounded-xl h-10 text-sm"
+            className="h-10 rounded-xl border-white/20 bg-white/10 text-sm text-white placeholder:text-white/30"
             autoFocus
           />
-          <button onClick={() => onAddIdea(cat.id)} disabled={isAddingIdea} className="text-violet-400 hover:text-violet-300 px-2 disabled:opacity-40">
+          <button
+            onClick={() => onAddIdea(cat.id)}
+            disabled={isAddingIdea}
+            className="px-2 text-violet-400 hover:text-violet-300 disabled:opacity-40"
+          >
             <Check size={18} />
           </button>
-          <button onClick={() => setAddingIdeaFor(null)} className="text-white/40 hover:text-white/70 px-1">
+          <button
+            onClick={() => setAddingIdeaFor(null)}
+            className="px-1 text-white/40 hover:text-white/70"
+          >
             <X size={16} />
           </button>
         </div>
       ) : (
         <button
-          onClick={() => { setAddingIdeaFor(cat.id); setNewIdeaTitle(''); }}
-          className="w-full text-left px-4 py-2.5 text-white/30 hover:text-white/60 text-sm flex items-center gap-2 transition-colors border-t border-white/5"
+          onClick={() => {
+            setAddingIdeaFor(cat.id);
+            setNewIdeaTitle('');
+          }}
+          className="flex w-full items-center gap-2 border-t border-white/5 px-4 py-2.5 text-left text-sm text-white/30 transition-colors hover:text-white/60"
         >
           <Plus size={14} /> {t.addIdea}
         </button>
@@ -171,7 +200,9 @@ export default function ProfilePage() {
   const [addingIdeaFor, setAddingIdeaFor] = useState<string | null>(null);
   const [newIdeaTitle, setNewIdeaTitle] = useState('');
   const [activeIdea, setActiveIdea] = useState<Idea | null>(null);
-  const [deletingCategory, setDeletingCategory] = useState<{ cat: Category; count: number } | null>(null);
+  const [deletingCategory, setDeletingCategory] = useState<{ cat: Category; count: number } | null>(
+    null,
+  );
   const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
 
   const sensors = useSensors(
@@ -202,7 +233,7 @@ export default function ProfilePage() {
     if (profileQuery.data && !editingUsername) {
       setUsernameInput(profileQuery.data.username ?? '');
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileQuery.data?.username]);
 
   useEffect(() => {
@@ -265,13 +296,13 @@ export default function ProfilePage() {
       await queryClient.cancelQueries({ queryKey: queryKeys.userIdeas() });
       const snapshot = queryClient.getQueryData<Idea[]>(queryKeys.userIdeas());
       const categories = categoriesQuery.data ?? [];
-      const targetCat = categories.find(c => c.id === categoryId);
-      queryClient.setQueryData<Idea[]>(queryKeys.userIdeas(), old =>
-        (old ?? []).map(i =>
+      const targetCat = categories.find((c) => c.id === categoryId);
+      queryClient.setQueryData<Idea[]>(queryKeys.userIdeas(), (old) =>
+        (old ?? []).map((i) =>
           i.id === id
             ? { ...i, category_id: categoryId, user_categories: targetCat ?? i.user_categories }
-            : i
-        )
+            : i,
+        ),
       );
       return { snapshot };
     },
@@ -289,13 +320,16 @@ export default function ProfilePage() {
 
   const confirmDeleteCategory = () => {
     if (!deletingCategory) return;
-    if (deleteStep === 1) { setDeleteStep(2); return; }
+    if (deleteStep === 1) {
+      setDeleteStep(2);
+      return;
+    }
     deleteCategoryMutation.mutate(deletingCategory.cat.id);
   };
 
   const handleDragStart = ({ active }: DragStartEvent) => {
     const ideas = ideasQuery.data ?? [];
-    setActiveIdea(ideas.find(i => i.id === active.id) ?? null);
+    setActiveIdea(ideas.find((i) => i.id === active.id) ?? null);
   };
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
@@ -304,23 +338,23 @@ export default function ProfilePage() {
 
     const ideas = ideasQuery.data ?? [];
     const categories = categoriesQuery.data ?? [];
-    const draggedIdea = ideas.find(i => i.id === active.id);
+    const draggedIdea = ideas.find((i) => i.id === active.id);
     if (!draggedIdea) return;
 
-    const overIdea = ideas.find(i => i.id === over.id);
+    const overIdea = ideas.find((i) => i.id === over.id);
     const targetCatId = overIdea ? overIdea.category_id : (over.id as string);
 
-    if (!targetCatId || !categories.find(c => c.id === targetCatId)) return;
+    if (!targetCatId || !categories.find((c) => c.id === targetCatId)) return;
 
     if (draggedIdea.category_id === targetCatId) {
       // Reorder within same category (local only)
       if (overIdea && active.id !== over.id) {
-        queryClient.setQueryData<Idea[]>(queryKeys.userIdeas(), prev => {
+        queryClient.setQueryData<Idea[]>(queryKeys.userIdeas(), (prev) => {
           if (!prev) return prev;
-          const catIdeas = prev.filter(i => i.category_id === targetCatId);
-          const others = prev.filter(i => i.category_id !== targetCatId);
-          const oldIdx = catIdeas.findIndex(i => i.id === active.id);
-          const newIdx = catIdeas.findIndex(i => i.id === over.id);
+          const catIdeas = prev.filter((i) => i.category_id === targetCatId);
+          const others = prev.filter((i) => i.category_id !== targetCatId);
+          const oldIdx = catIdeas.findIndex((i) => i.id === active.id);
+          const newIdx = catIdeas.findIndex((i) => i.id === over.id);
           return [...others, ...arrayMove(catIdeas, oldIdx, newIdx)];
         });
       }
@@ -332,8 +366,8 @@ export default function ProfilePage() {
 
   if (!isLoaded || isLoading) {
     return (
-      <div className="h-dvh bg-[#0a0a0f] flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+      <div className="flex h-dvh items-center justify-center bg-[#0a0a0f]">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-violet-500 border-t-transparent" />
       </div>
     );
   }
@@ -341,29 +375,36 @@ export default function ProfilePage() {
   const profile = profileQuery.data;
   const categories = categoriesQuery.data ?? [];
   const ideas = ideasQuery.data ?? [];
-  const displayName = profile?.username || [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.username || 'User';
+  const displayName =
+    profile?.username ||
+    [user?.firstName, user?.lastName].filter(Boolean).join(' ') ||
+    user?.username ||
+    'User';
 
   return (
-    <main className="min-h-dvh bg-[#0a0a0f] text-white pb-16">
-      <div className="max-w-lg mx-auto px-6">
+    <main className="min-h-dvh bg-[#0a0a0f] pb-16 text-white">
+      <div className="mx-auto max-w-lg px-6">
         <PageHeader title={t.myProfile} />
 
         {/* Profile card */}
-        <div className="bg-white/5 rounded-2xl p-5 space-y-5 mb-6">
+        <div className="mb-6 space-y-5 rounded-2xl bg-white/5 p-5">
           {/* Avatar + name */}
           <div className="flex items-center gap-4">
-            <UserButton appearance={{ elements: { avatarBox: 'w-14 h-14', userButtonPopoverCard: 'mr-2' } }} />
-            <div className="flex-1 min-w-0">
+            <UserButton
+              appearance={{ elements: { avatarBox: 'w-14 h-14', userButtonPopoverCard: 'mr-2' } }}
+            />
+            <div className="min-w-0 flex-1">
               {editingUsername ? (
                 <div className="flex items-center gap-2">
                   <Input
                     value={usernameInput}
-                    onChange={e => setUsernameInput(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter' && !saveProfileMutation.isPending) saveProfileMutation.mutate({ username: usernameInput || null });
+                    onChange={(e) => setUsernameInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !saveProfileMutation.isPending)
+                        saveProfileMutation.mutate({ username: usernameInput || null });
                       if (e.key === 'Escape') setEditingUsername(false);
                     }}
-                    className="bg-white/10 border-white/20 text-white h-9 rounded-lg text-sm"
+                    className="h-9 rounded-lg border-white/20 bg-white/10 text-sm text-white"
                     maxLength={30}
                     autoFocus
                   />
@@ -374,32 +415,40 @@ export default function ProfilePage() {
                   >
                     <Check size={18} />
                   </button>
-                  <button onClick={() => setEditingUsername(false)} className="text-white/40 hover:text-white/70">
+                  <button
+                    onClick={() => setEditingUsername(false)}
+                    className="text-white/40 hover:text-white/70"
+                  >
                     <X size={18} />
                   </button>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <span className="text-white font-semibold text-lg truncate">{displayName}</span>
-                  <button onClick={() => setEditingUsername(true)} className="text-white/30 hover:text-white/60 transition-colors">
+                  <span className="truncate text-lg font-semibold text-white">{displayName}</span>
+                  <button
+                    onClick={() => setEditingUsername(true)}
+                    className="text-white/30 transition-colors hover:text-white/60"
+                  >
                     <Pencil size={14} />
                   </button>
                 </div>
               )}
-              <p className="text-white/40 text-sm truncate">{user?.primaryEmailAddress?.emailAddress}</p>
+              <p className="truncate text-sm text-white/40">
+                {user?.primaryEmailAddress?.emailAddress}
+              </p>
             </div>
           </div>
 
-          {saveProfileMutation.isPending && <p className="text-white/40 text-xs">{t.saving}</p>}
+          {saveProfileMutation.isPending && <p className="text-xs text-white/40">{t.saving}</p>}
         </div>
 
         {/* Ideas by category */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-white font-bold text-lg">{t.myIdeas}</h2>
+            <h2 className="text-lg font-bold text-white">{t.myIdeas}</h2>
             <button
               onClick={() => setAddingCategory(true)}
-              className="text-violet-400 hover:text-violet-300 text-sm flex items-center gap-1 transition-colors"
+              className="flex items-center gap-1 text-sm text-violet-400 transition-colors hover:text-violet-300"
             >
               <Plus size={16} /> {t.addCategory}
             </button>
@@ -407,38 +456,42 @@ export default function ProfilePage() {
 
           {/* New category input */}
           {addingCategory && (
-            <div className="flex gap-2 items-center">
+            <div className="flex items-center gap-2">
               <div className="relative flex-shrink-0" title={t.accentColor}>
                 <input
                   type="color"
                   value={newCategoryColor}
-                  onChange={e => setNewCategoryColor(e.target.value)}
-                  className="w-9 h-11 rounded-xl cursor-pointer opacity-0 absolute inset-0"
+                  onChange={(e) => setNewCategoryColor(e.target.value)}
+                  className="absolute inset-0 h-11 w-9 cursor-pointer rounded-xl opacity-0"
                 />
                 <div
-                  className="w-9 h-11 rounded-xl border border-white/20 pointer-events-none"
+                  className="pointer-events-none h-11 w-9 rounded-xl border border-white/20"
                   style={{ backgroundColor: newCategoryColor }}
                 />
               </div>
               <Input
                 value={newCategoryName}
-                onChange={e => setNewCategoryName(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && !addCategoryMutation.isPending) addCategoryMutation.mutate();
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !addCategoryMutation.isPending)
+                    addCategoryMutation.mutate();
                   if (e.key === 'Escape') setAddingCategory(false);
                 }}
                 placeholder={t.categoryNamePlaceholder}
-                className="bg-white/10 border-white/20 text-white placeholder:text-white/30 rounded-xl h-11"
+                className="h-11 rounded-xl border-white/20 bg-white/10 text-white placeholder:text-white/30"
                 autoFocus
               />
               <Button
                 onClick={() => addCategoryMutation.mutate()}
                 disabled={addCategoryMutation.isPending}
-                className="h-11 rounded-xl bg-violet-600 hover:bg-violet-500 border-0 px-4 flex-shrink-0"
+                className="h-11 flex-shrink-0 rounded-xl border-0 bg-violet-600 px-4 hover:bg-violet-500"
               >
                 <Check size={18} />
               </Button>
-              <button onClick={() => setAddingCategory(false)} className="text-white/40 hover:text-white/70 px-1 flex-shrink-0">
+              <button
+                onClick={() => setAddingCategory(false)}
+                className="flex-shrink-0 px-1 text-white/40 hover:text-white/70"
+              >
                 <X size={18} />
               </button>
             </div>
@@ -450,29 +503,33 @@ export default function ProfilePage() {
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            {categories.map(cat => (
+            {categories.map((cat) => (
               <DroppableCategory
                 key={cat.id}
                 cat={cat}
-                ideas={ideas.filter(i => i.category_id === cat.id)}
+                ideas={ideas.filter((i) => i.category_id === cat.id)}
                 addingIdeaFor={addingIdeaFor}
                 newIdeaTitle={newIdeaTitle}
                 setNewIdeaTitle={setNewIdeaTitle}
                 setAddingIdeaFor={setAddingIdeaFor}
-                onAddIdea={(catId) => addIdeaMutation.mutate({ title: newIdeaTitle.trim(), categoryId: catId })}
+                onAddIdea={(catId) =>
+                  addIdeaMutation.mutate({ title: newIdeaTitle.trim(), categoryId: catId })
+                }
                 onDeleteIdea={(id) => deleteIdeaMutation.mutate(id)}
                 onDeleteCategory={requestDeleteCategory}
                 isAddingIdea={addIdeaMutation.isPending}
-                isIdeaDeleting={(id) => deleteIdeaMutation.isPending && deleteIdeaMutation.variables === id}
+                isIdeaDeleting={(id) =>
+                  deleteIdeaMutation.isPending && deleteIdeaMutation.variables === id
+                }
                 t={t}
               />
             ))}
 
             <DragOverlay>
               {activeIdea && (
-                <div className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a2e] border border-violet-500/50 rounded-xl shadow-xl">
+                <div className="flex items-center gap-2 rounded-xl border border-violet-500/50 bg-[#1a1a2e] px-4 py-2.5 shadow-xl">
                   <GripVertical size={14} className="text-white/40" />
-                  <span className="text-white/80 text-sm">{activeIdea.title}</span>
+                  <span className="text-sm text-white/80">{activeIdea.title}</span>
                 </div>
               )}
             </DragOverlay>
@@ -480,8 +537,8 @@ export default function ProfilePage() {
 
           {/* Empty state */}
           {categories.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-white/30 text-sm">{t.noCategoriesHint}</p>
+            <div className="py-12 text-center">
+              <p className="text-sm text-white/30">{t.noCategoriesHint}</p>
             </div>
           )}
         </div>
@@ -489,29 +546,36 @@ export default function ProfilePage() {
 
       {/* Delete category confirmation modal */}
       {deletingCategory && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
-          <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6 w-full max-w-sm space-y-4">
-            <p className="text-white font-semibold text-base leading-snug">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 backdrop-blur-sm sm:items-center">
+          <div className="w-full max-w-sm space-y-4 rounded-2xl border border-white/10 bg-[#1a1a2e] p-6">
+            <p className="text-base leading-snug font-semibold text-white">
               {deleteStep === 1
                 ? t.deleteCategoryConfirm(deletingCategory.cat.name, deletingCategory.count)
                 : t.deleteCategoryConfirm2}
             </p>
             <div className="flex gap-3">
               <button
-                onClick={() => { setDeletingCategory(null); setDeleteStep(1); }}
+                onClick={() => {
+                  setDeletingCategory(null);
+                  setDeleteStep(1);
+                }}
                 disabled={deleteCategoryMutation.isPending}
-                className="flex-1 h-11 rounded-xl bg-white/10 hover:bg-white/15 text-white text-sm font-medium transition-colors disabled:opacity-50"
+                className="h-11 flex-1 rounded-xl bg-white/10 text-sm font-medium text-white transition-colors hover:bg-white/15 disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDeleteCategory}
                 disabled={deleteCategoryMutation.isPending}
-                className="flex-1 h-11 rounded-xl bg-red-600 hover:bg-red-500 text-white text-sm font-bold transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
+                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 text-sm font-bold text-white transition-colors hover:bg-red-500 disabled:opacity-70"
               >
-                {deleteCategoryMutation.isPending
-                  ? <Loader2 size={16} className="animate-spin" />
-                  : deleteStep === 1 ? 'Continue' : 'Delete'}
+                {deleteCategoryMutation.isPending ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : deleteStep === 1 ? (
+                  'Continue'
+                ) : (
+                  'Delete'
+                )}
               </button>
             </div>
           </div>

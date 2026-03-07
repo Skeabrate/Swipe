@@ -29,7 +29,7 @@ export function SessionLoader({ initialData }: Props) {
   useEffect(() => {
     const s = loadSession(room.code);
     // Validate participant still exists in the room
-    if (s && initialData.participants.some(p => p.id === s.participantId)) {
+    if (s && initialData.participants.some((p) => p.id === s.participantId)) {
       setSession(s);
     } else {
       setSession(null);
@@ -39,7 +39,7 @@ export function SessionLoader({ initialData }: Props) {
   if (session === 'loading') {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="w-6 h-6 rounded-full border-2 border-white/20 border-t-violet-400 animate-spin" />
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-violet-400" />
       </div>
     );
   }
@@ -47,9 +47,9 @@ export function SessionLoader({ initialData }: Props) {
   if (!session) {
     if (room.phase !== 'lobby') {
       return (
-        <div className="flex flex-col h-full items-center justify-center gap-4 px-8 text-center">
+        <div className="flex h-full flex-col items-center justify-center gap-4 px-8 text-center">
           <p className="text-4xl">🔒</p>
-          <h2 className="text-white font-black text-2xl">Room in progress</h2>
+          <h2 className="text-2xl font-black text-white">Room in progress</h2>
           <p className="text-white/50">This room has already started. You can't join now.</p>
         </div>
       );
