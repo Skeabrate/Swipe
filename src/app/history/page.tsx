@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import { Trophy, BookmarkPlus, Check } from 'lucide-react';
+import { Trophy, BookmarkPlus, Check, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { useT } from '@/i18n/LanguageContext';
 import { PageHeader } from '@/components/PageHeader';
@@ -56,7 +56,10 @@ export default function HistoryPage() {
   }, [isLoaded, isSignedIn, router]);
 
   const isLoading = roomsQuery.isLoading || categoriesQuery.isLoading;
-  const rooms = roomsQuery.data ?? [];
+  const allRooms = roomsQuery.data ?? [];
+  const activeRooms = allRooms.filter((r) => r.phase !== 'results');
+  const finishedRooms = allRooms.filter((r) => r.phase === 'results');
+  const rooms = finishedRooms;
   const categories = categoriesQuery.data ?? [];
 
   const formatDate = (iso: string) => {
@@ -80,11 +83,34 @@ export default function HistoryPage() {
       <div className="mx-auto max-w-lg px-6">
         <PageHeader title={t.roomHistory} />
 
-        {rooms.length === 0 ? (
+        {activeRooms.length > 0 && (
+          <div className="mb-6 space-y-3">
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-white/30">
+              {t.activeRooms}
+            </h2>
+            {activeRooms.map((room) => (
+              <button
+                key={room.id}
+                onClick={() => router.push(`/room/${room.code}`)}
+                className="flex w-full items-center justify-between gap-3 rounded-2xl border border-violet-500/30 bg-violet-500/10 px-4 py-3.5 text-left transition-colors hover:bg-violet-500/20"
+              >
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-white">{room.topic}</p>
+                  <p className="mt-0.5 text-xs text-white/40">#{room.code} · {room.phase}</p>
+                </div>
+                <span className="flex flex-shrink-0 items-center gap-1.5 text-sm font-medium text-violet-300">
+                  {t.rejoinRoom} <ArrowRight size={15} />
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {rooms.length === 0 && activeRooms.length === 0 ? (
           <div className="py-20 text-center">
             <p className="text-sm text-white/30">{t.noRoomsYet}</p>
           </div>
-        ) : (
+        ) : rooms.length > 0 ? (
           <div className="space-y-4">
             {rooms.map((room) => (
               <div key={room.id} className="overflow-hidden rounded-2xl bg-white/5">
@@ -187,7 +213,7 @@ export default function HistoryPage() {
               </div>
             ))}
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Category picker sheet */}

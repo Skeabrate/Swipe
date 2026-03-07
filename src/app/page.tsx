@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
-import { saveSession } from '@/lib/session';
+import { saveSession, loadLastRoomCode } from '@/lib/session';
 import { toast } from 'sonner';
 import { useT } from '@/i18n/LanguageContext';
 import { useUser, SignInButton, SignUpButton, UserButton, Show } from '@clerk/nextjs';
@@ -40,6 +40,12 @@ export default function Home() {
   const [roomCode, setRoomCode] = useState('');
 
   const [loginRequiredOpen, setLoginRequiredOpen] = useState(false);
+  const [lastRoomCode, setLastRoomCode] = useState<string | null>(null);
+
+  // Load latest room session from localStorage
+  useEffect(() => {
+    setLastRoomCode(loadLastRoomCode());
+  }, []);
 
   // Auto-fill name when user is signed in
   useEffect(() => {
@@ -168,6 +174,18 @@ export default function Home() {
               >
                 <Users size={22} /> {t.joinWithCode}
               </Button>
+
+              {/* Return to latest room */}
+              {lastRoomCode && (
+                <Button
+                  onClick={() => router.push(`/room/${lastRoomCode}`)}
+                  variant="outline"
+                  className="h-12 w-full gap-2 rounded-2xl border-violet-500/30 bg-violet-500/10 text-sm font-medium text-violet-300 hover:bg-violet-500/20 hover:text-violet-200"
+                >
+                  <ArrowRight size={16} />
+                  {t.returnToRoom} #{lastRoomCode}
+                </Button>
+              )}
 
               {/* Quick links — always visible, locked for guests */}
               <div className="flex gap-2 pt-1">

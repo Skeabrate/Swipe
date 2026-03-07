@@ -130,6 +130,9 @@ export const translations = {
     ideaSaved: (title: string) => `"${title}" saved to ideas`,
     saveIdeaTo: (title: string) => `Save "${title}" to...`,
     noCategory: 'No category',
+    activeRooms: 'Active Rooms',
+    rejoinRoom: 'Rejoin',
+    returnToRoom: 'Return to room',
 
     // Profile page
     myProfile: 'My Profile',
@@ -290,6 +293,9 @@ export const translations = {
     ideaSaved: (title: string) => `"${title}" zapisano do pomysłów`,
     saveIdeaTo: (title: string) => `Zapisz "${title}" do...`,
     noCategory: 'Bez kategorii',
+    activeRooms: 'Aktywne pokoje',
+    rejoinRoom: 'Wróć',
+    returnToRoom: 'Wróć do pokoju',
 
     // Profile page
     myProfile: 'Mój profil',
