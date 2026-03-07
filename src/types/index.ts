@@ -74,6 +74,15 @@ export interface SuggestionScore {
   likes: number;
 }
 
+export interface RoomMessage {
+  id: string;
+  room_id: string;
+  participant_id: string;
+  content: string;
+  created_at: string;
+  participant?: Participant;
+}
+
 export interface LocalSession {
   token: string;
   participantId: string;

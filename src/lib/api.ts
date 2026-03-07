@@ -175,6 +175,13 @@ export const submitTiebreaker = (code: string, suggestionId: string, token: stri
     body: JSON.stringify({ suggestionId }),
   });
 
+export const sendChatMessage = (code: string, content: string, token: string) =>
+  apiFetch<void>(`/api/rooms/${code}/messages`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...auth(token) },
+    body: JSON.stringify({ content }),
+  });
+
 export const submitChallengeVote = (
   code: string,
   matchId: string,

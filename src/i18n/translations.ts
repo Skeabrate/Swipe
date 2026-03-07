@@ -157,6 +157,12 @@ export const translations = {
       `${count} items tied with ${score} ${score === 1 ? 'like' : 'likes'}.`,
     tiebreakerVotes: (n: number) => `${n} ${n === 1 ? 'vote' : 'votes'}`,
     roomCodeDisplay: (code: string) => `Room ${code}`,
+
+    // Chat
+    chatLabel: 'Chat',
+    chatPlaceholder: 'Say something...',
+    chatEmptyState: 'No messages yet...',
+    chatSendAriaLabel: 'Send message',
   },
 
   pl: {
@@ -310,6 +316,12 @@ export const translations = {
       `${count} ${plPlural(count, 'propozycja', 'propozycje', 'propozycji')} z ${score} ${plPlural(score, 'polubieniem', 'polubień', 'polubień')}.`,
     tiebreakerVotes: (n: number) => `${n} ${plPlural(n, 'głos', 'głosy', 'głosów')}`,
     roomCodeDisplay: (code: string) => `Pokój ${code}`,
+
+    // Chat
+    chatLabel: 'Czat',
+    chatPlaceholder: 'Napisz coś...',
+    chatEmptyState: 'Brak wiadomości...',
+    chatSendAriaLabel: 'Wyślij wiadomość',
   },
 };
 

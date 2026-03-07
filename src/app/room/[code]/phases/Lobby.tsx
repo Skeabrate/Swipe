@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Copy, Check, Users, Crown, ArrowRight, Lightbulb, Plus, Trash2 } from 'lucide-react';
+import { Copy, Check, Users, Crown, ArrowRight, Lightbulb, Plus, Trash2, MessageCircle, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -15,10 +15,12 @@ import * as api from '@/lib/api';
 import { SpinWheelButton } from '../SpinWheelButton';
 
 export function Lobby() {
-  const { room, participants, suggestions, session, isHost } = useRoom();
+  const { room, participants, suggestions, messages, session, isHost } = useRoom();
   const { t } = useT();
   const [copied, setCopied] = useState(false);
   const [newIdea, setNewIdea] = useState('');
+  const [chatInput, setChatInput] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const inviteUrl =
     typeof window !== 'undefined' ? `${window.location.origin}/room/${room.code}` : '';
@@ -31,6 +33,22 @@ export function Lobby() {
   };
 
   const isPredefined = room.ideas_mode === 'predefined';
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const sendMessageMutation = useMutation({
+    mutationFn: (content: string) => api.sendChatMessage(room.code, content, session.token),
+    onSuccess: () => setChatInput(''),
+    onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed to send'),
+  });
+
+  const handleSend = () => {
+    const trimmed = chatInput.trim();
+    if (!trimmed || sendMessageMutation.isPending) return;
+    sendMessageMutation.mutate(trimmed);
+  };
 
   const addIdeaMutation = useMutation({
     mutationFn: (title: string) => api.addRoomSuggestion(room.code, title, session.token),
@@ -106,12 +124,69 @@ export function Lobby() {
         </div>
       </motion.div>
 
+      {/* Chat */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="space-y-3"
+      >
+        <div className="flex items-center gap-2">
+          <MessageCircle size={16} className="text-white/50" />
+          <span className="text-sm tracking-widest text-white/50 uppercase">{t.chatLabel}</span>
+        </div>
+
+        <div className="max-h-48 overflow-y-auto rounded-2xl bg-white/5 p-3 space-y-2">
+          {messages.length === 0 ? (
+            <p className="py-2 text-center text-sm text-white/25">{t.chatEmptyState}</p>
+          ) : (
+            messages.map((msg) => {
+              const isMe = msg.participant_id === session.participantId;
+              const name = msg.participant?.name ?? participants.find((p) => p.id === msg.participant_id)?.name ?? '?';
+              return (
+                <div key={msg.id} className={`flex gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
+                  <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-purple-700 text-xs font-bold text-white">
+                    {name[0].toUpperCase()}
+                  </div>
+                  <div className={`flex flex-col gap-0.5 max-w-[75%] ${isMe ? 'items-end' : ''}`}>
+                    <span className="text-xs text-white/40">{name}</span>
+                    <span className={`rounded-2xl px-3 py-1.5 text-sm text-white break-words ${isMe ? 'bg-violet-600/60' : 'bg-white/10'}`}>
+                      {msg.content}
+                    </span>
+                  </div>
+                </div>
+              );
+            })
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        <div className="flex gap-2">
+          <Input
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value.slice(0, 200))}
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            placeholder={t.chatPlaceholder}
+            className="flex-1 rounded-xl border-white/20 bg-white/10 text-white placeholder:text-white/30"
+            disabled={sendMessageMutation.isPending}
+          />
+          <button
+            onClick={handleSend}
+            disabled={sendMessageMutation.isPending || !chatInput.trim()}
+            aria-label={t.chatSendAriaLabel}
+            className="rounded-xl bg-violet-600 px-3 text-white transition-colors hover:bg-violet-500 disabled:opacity-40"
+          >
+            <Send size={16} />
+          </button>
+        </div>
+      </motion.div>
+
       {/* Predefined ideas — editable for host, read-only for guests */}
       {isPredefined && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
+          transition={{ delay: 0.2 }}
           className="space-y-3"
         >
           <div className="flex items-center gap-2">
@@ -190,7 +265,7 @@ export function Lobby() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
+        transition={{ delay: 0.25 }}
         className="space-y-3"
       >
         <button

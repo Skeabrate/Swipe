@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext } from 'react';
-import { Room, Participant, Suggestion, Vote, TiebreakerPick, ChallengeMatch, ChallengeVote, LocalSession } from '@/types';
+import { Room, Participant, Suggestion, Vote, TiebreakerPick, ChallengeMatch, ChallengeVote, RoomMessage, LocalSession } from '@/types';
 
 export interface RoomContextValue {
   room: Room;
@@ -11,6 +11,7 @@ export interface RoomContextValue {
   tiebreakerPicks: TiebreakerPick[];
   challengeMatches: ChallengeMatch[];
   challengeVotes: ChallengeVote[];
+  messages: RoomMessage[];
   session: LocalSession;
   isHost: boolean;
   myVotes: Vote[];

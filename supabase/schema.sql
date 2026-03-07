@@ -155,3 +155,34 @@ create policy "public_read" on user_profiles for select using (true);
 create policy "public_read" on user_categories for select using (true);
 create policy "public_read" on user_ideas for select using (true);
 -- Writes handled by API routes using the service role key (bypasses RLS)
+
+-- ─── Lobby Chat ───────────────────────────────────────────────────────────────
+
+create table if not exists room_messages (
+  id             uuid primary key default gen_random_uuid(),
+  room_id        uuid references rooms(id) on delete cascade not null,
+  participant_id uuid references participants(id) on delete cascade not null,
+  content        text not null check (char_length(content) <= 200),
+  created_at     timestamptz default now()
+);
+
+alter table room_messages enable row level security;
+alter table room_messages replica identity full;
+create policy "public_read" on room_messages for select using (true);
+
+-- Auto-delete messages when room reaches results phase
+create or replace function delete_messages_on_results()
+returns trigger as $$
+begin
+  if new.phase = 'results' and old.phase != 'results' then
+    delete from room_messages where room_id = new.id;
+  end if;
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger room_results_cleanup
+after update on rooms
+for each row
+execute function delete_messages_on_results();
+-- Also add room_messages to the supabase_realtime publication in the dashboard

@@ -1,7 +1,7 @@
 'use client';
 
 import { getSupabaseClient } from '@/lib/supabase';
-import { ChallengeMatch, ChallengeVote, LocalSession, Participant, Room, Suggestion, TiebreakerPick, Vote } from '@/types';
+import { ChallengeMatch, ChallengeVote, LocalSession, Participant, Room, RoomMessage, Suggestion, TiebreakerPick, Vote } from '@/types';
 import { useEffect, useReducer } from 'react';
 import { RoomContext } from './RoomContext';
 
@@ -13,6 +13,7 @@ interface State {
   tiebreakerPicks: TiebreakerPick[];
   challengeMatches: ChallengeMatch[];
   challengeVotes: ChallengeVote[];
+  messages: RoomMessage[];
 }
 
 type Action =
@@ -24,7 +25,8 @@ type Action =
   | { type: 'UPSERT_VOTE'; vote: Vote }
   | { type: 'UPSERT_TIEBREAKER'; pick: TiebreakerPick }
   | { type: 'UPSERT_CHALLENGE_MATCH'; match: ChallengeMatch }
-  | { type: 'ADD_CHALLENGE_VOTE'; vote: ChallengeVote };
+  | { type: 'ADD_CHALLENGE_VOTE'; vote: ChallengeVote }
+  | { type: 'ADD_MESSAGE'; message: RoomMessage };
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
@@ -75,6 +77,13 @@ function reducer(state: State, action: Action): State {
         challengeVotes: state.challengeVotes.some((v) => v.id === action.vote.id)
           ? state.challengeVotes
           : [...state.challengeVotes, action.vote],
+      };
+    case 'ADD_MESSAGE':
+      return {
+        ...state,
+        messages: state.messages.some((m) => m.id === action.message.id)
+          ? state.messages
+          : [...state.messages, action.message],
       };
     default:
       return state;
@@ -230,6 +239,20 @@ export function RoomProvider({ initial, session, children }: Props) {
           dispatch({ type: 'ADD_CHALLENGE_VOTE', vote: payload.new as ChallengeVote });
         },
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'room_messages',
+          filter: `room_id=eq.${roomId}`,
+        },
+        (payload) => {
+          const m = payload.new as RoomMessage;
+          const participant = state.participants.find((p) => p.id === m.participant_id);
+          dispatch({ type: 'ADD_MESSAGE', message: { ...m, participant } });
+        },
+      )
       .subscribe();
 
     return () => {
@@ -261,6 +284,7 @@ export function RoomProvider({ initial, session, children }: Props) {
         tiebreakerPicks: state.tiebreakerPicks,
         challengeMatches: state.challengeMatches,
         challengeVotes: state.challengeVotes,
+        messages: state.messages,
         session,
         isHost,
         myVotes,
