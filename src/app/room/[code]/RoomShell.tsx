@@ -22,7 +22,7 @@ export function RoomShell() {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -16 }}
         transition={{ duration: 0.25 }}
-        className="h-full"
+        className=""
       >
         {room.phase === 'lobby' && <Lobby />}
         {room.phase === 'submitting' && <Submitting />}

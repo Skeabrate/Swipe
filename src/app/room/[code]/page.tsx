@@ -27,7 +27,7 @@ export default async function RoomPage({ params }: Props) {
     ]);
 
   return (
-    <main className="h-dvh bg-[#0a0a0f] overflow-hidden">
+    <main className="min-h-dvh bg-[#0a0a0f] overflow-auto">
       <SessionLoader
         initialData={{
           room,

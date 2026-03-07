@@ -48,7 +48,7 @@ export function Lobby() {
   });
 
   return (
-    <div className='flex flex-col h-full px-6 pt-16 pb-8 gap-8'>
+    <div className='flex flex-col px-6 pt-16 pb-8 gap-8'>
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -68,7 +68,7 @@ export function Lobby() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className='flex-1 min-h-0'
+        className=''
       >
         <div className='flex items-center gap-2 mb-4'>
           <Users
@@ -78,7 +78,7 @@ export function Lobby() {
           <span className='text-white/50 text-sm uppercase tracking-widest'>{t.waitingForFriends}</span>
         </div>
 
-        <div className='space-y-3 overflow-auto max-h-full'>
+        <div className='space-y-3'>
           {participants.map((p, i) => (
             <motion.div
               key={p.id}
@@ -127,7 +127,7 @@ export function Lobby() {
             <span className='text-white/30 text-xs ml-auto'>{suggestions.length}/20</span>
           </div>
 
-          <div className='space-y-2 max-h-48 overflow-auto'>
+          <div className='space-y-2'>
             <AnimatePresence initial={false}>
               {suggestions.map((s) => (
                 <motion.div
