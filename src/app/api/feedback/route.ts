@@ -7,7 +7,7 @@ const MAX_MESSAGE_LENGTH = 2000;
 const HTML_TAG_RE = /<[^>]*>/g;
 
 export async function POST(req: Request) {
-  const { type, message } = await req.json();
+  const { type, message, email } = await req.json();
 
   if (!FEEDBACK_TYPES.includes(type)) {
     return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
@@ -25,11 +25,13 @@ export async function POST(req: Request) {
   const suspicious = stripped !== message;
   const subjectPrefix = suspicious ? '[ALERT] [Swipe Feedback]' : '[Swipe Feedback]';
 
+  const senderLine = email ? `From: ${email}\n` : '';
+
   const { error } = await resend.emails.send({
     from: 'Swipe Feedback <onboarding@resend.dev>',
     to: 'sebastianswiecz458@gmail.com',
     subject: `${subjectPrefix} ${type}`,
-    text: `Type: ${type}${suspicious ? '\n⚠️ HTML/script tags were detected and stripped from this message.' : ''}\n\n${stripped}`,
+    text: `Type: ${type}\n${senderLine}${suspicious ? '⚠️ HTML/script tags were detected and stripped from this message.\n' : ''}\n${stripped}`,
   });
 
   if (error) {

@@ -4,28 +4,35 @@ import { useState } from 'react';
 import { Bug, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import { useUser } from '@clerk/nextjs';
 import { FEEDBACK_TYPES, type FeedbackType } from '@/lib/feedback';
 import { useT } from '@/i18n/LanguageContext';
 
 export function FeedbackButton() {
   const { t } = useT();
+  const { isSignedIn, user } = useUser();
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<FeedbackType>(FEEDBACK_TYPES[0]);
   const [message, setMessage] = useState('');
+  const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
     if (!message.trim()) return;
     setLoading(true);
+    const senderEmail = isSignedIn
+      ? (user.primaryEmailAddress?.emailAddress ?? null)
+      : email.trim() || null;
     try {
       const res = await fetch('/api/feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, message }),
+        body: JSON.stringify({ type, message, email: senderEmail }),
       });
       if (!res.ok) throw new Error('Failed to send');
       toast.success(t.feedbackSuccess);
       setMessage('');
+      setEmail('');
       setType(FEEDBACK_TYPES[0]);
       setOpen(false);
     } catch {
@@ -104,6 +111,21 @@ export function FeedbackButton() {
                   className="w-full resize-none rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white transition-colors placeholder:text-white/30 focus:border-violet-500/60 focus:outline-none"
                 />
               </div>
+
+              {!isSignedIn && (
+                <div className="mb-5">
+                  <p className="mb-3 text-xs tracking-widest text-white/50 uppercase">
+                    {t.feedbackEmailLabel}
+                  </p>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder={t.feedbackEmailPlaceholder}
+                    className="w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white transition-colors placeholder:text-white/30 focus:border-violet-500/60 focus:outline-none"
+                  />
+                </div>
+              )}
 
               <button
                 onClick={handleSubmit}

@@ -98,6 +98,8 @@ export const translations = {
     feedbackError: 'Failed to send feedback. Please try again.',
     feedbackAriaLabel: 'Send feedback',
     feedbackTypes: { Bug: 'Bug', 'Feature Request': 'Feature Request', Other: 'Other' },
+    feedbackEmailLabel: 'Email (optional)',
+    feedbackEmailPlaceholder: 'your@email.com',
 
     // Auth
     signIn: 'Sign in',
@@ -234,6 +236,8 @@ export const translations = {
     feedbackError: 'Nie udało się wysłać. Spróbuj ponownie.',
     feedbackAriaLabel: 'Wyślij opinię',
     feedbackTypes: { Bug: 'Bug', 'Feature Request': 'Propozycja ficzera', Other: 'Inne' },
+    feedbackEmailLabel: 'Email (opcjonalnie)',
+    feedbackEmailPlaceholder: 'twoj@email.com',
 
     // Auth
     signIn: 'Zaloguj',
