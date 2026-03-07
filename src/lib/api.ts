@@ -74,6 +74,7 @@ export interface CreateRoomData {
   anonymous: boolean;
   ideasMode: 'open' | 'predefined';
   predefinedIdeas: string[];
+  drawType: 'standard' | 'challenge';
 }
 
 export interface CreateRoomResponse {
@@ -172,4 +173,16 @@ export const submitTiebreaker = (code: string, suggestionId: string, token: stri
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...auth(token) },
     body: JSON.stringify({ suggestionId }),
+  });
+
+export const submitChallengeVote = (
+  code: string,
+  matchId: string,
+  suggestionId: string,
+  token: string,
+) =>
+  apiFetch<void>(`/api/rooms/${code}/challenge-vote`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...auth(token) },
+    body: JSON.stringify({ matchId, suggestionId }),
   });

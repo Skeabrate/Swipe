@@ -6,6 +6,7 @@ import { Submitting } from './phases/Submitting';
 import { Voting } from './phases/Voting';
 import { Tiebreaker } from './phases/Tiebreaker';
 import { Wheel } from './phases/Wheel';
+import { Challenge } from './phases/Challenge';
 import { Results } from './phases/Results';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -20,13 +21,14 @@ export function RoomShell() {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -16 }}
         transition={{ duration: 0.25 }}
-        className=""
+        className="h-full"
       >
         {room.phase === 'lobby' && <Lobby />}
         {room.phase === 'submitting' && <Submitting />}
         {room.phase === 'voting' && <Voting />}
         {room.phase === 'tiebreaker' && <Tiebreaker />}
         {room.phase === 'wheel' && <Wheel />}
+        {room.phase === 'challenge' && <Challenge />}
         {room.phase === 'results' && <Results />}
       </motion.div>
     </AnimatePresence>

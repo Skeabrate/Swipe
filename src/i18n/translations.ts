@@ -40,6 +40,7 @@ export const translations = {
     startingLabel: 'Starting...',
     startEveryoneAdd: 'Start — everyone add their picks',
     startVoting: 'Start Voting',
+    startChallenge: 'Start Challenge',
     waitingForHost: 'Waiting for the host to start...',
     youBadge: 'You',
     predefinedIdeasPreview: 'Ideas to vote on',
@@ -60,6 +61,19 @@ export const translations = {
     wheelRevealResults: 'Reveal Results',
     wheelWaitingReveal: 'Waiting for host to reveal...',
     chosenByWheel: 'Chosen by the wheel',
+    wonTheBracket: 'Won the bracket',
+
+    // Challenge
+    drawTypeLabel: 'Draw type',
+    drawTypeStandard: 'Standard',
+    drawTypeChallenge: 'Challenge',
+    drawTypeStandardDesc: 'Swipe voting',
+    drawTypeChallengeDesc: 'Bracket battle',
+    challengeRound: (round: number) => `Round ${round}`,
+    challengeMatch: (current: number, total: number) => `Match ${current} of ${total}`,
+    challengeVoted: (voted: number, total: number) => `${voted} / ${total} voted`,
+    challengeWaitingOthers: 'Waiting for others...',
+    challengePickOne: 'Pick the winner',
 
     // Voting
     youAreDoneVoting: "You're done!",
@@ -178,6 +192,7 @@ export const translations = {
     startingLabel: 'Uruchamianie...',
     startEveryoneAdd: 'Start — wszyscy dodają propozycje',
     startVoting: 'Zacznij głosowanie',
+    startChallenge: 'Zacznij wyzwanie',
     waitingForHost: 'Czekanie na start hosta...',
     youBadge: 'Ty',
     predefinedIdeasPreview: 'Pomysły do głosowania',
@@ -198,6 +213,19 @@ export const translations = {
     wheelRevealResults: 'Pokaż wyniki',
     wheelWaitingReveal: 'Czekanie na hosta...',
     chosenByWheel: 'Wybrano przez koło fortuny',
+    wonTheBracket: 'Wygrał zawody',
+
+    // Challenge
+    drawTypeLabel: 'Tryb losowania',
+    drawTypeStandard: 'Standardowy',
+    drawTypeChallenge: 'Wyzwanie',
+    drawTypeStandardDesc: 'Głosowanie przez swipe',
+    drawTypeChallengeDesc: 'Drabinka eliminacyjna',
+    challengeRound: (round: number) => `Runda ${round}`,
+    challengeMatch: (current: number, total: number) => `Pojedynek ${current} z ${total}`,
+    challengeVoted: (voted: number, total: number) => `${voted} / ${total} zagłosowało`,
+    challengeWaitingOthers: 'Czekam na pozostałych...',
+    challengePickOne: 'Wybierz zwycięzcę',
 
     // Voting
     youAreDoneVoting: 'Gotowe!',

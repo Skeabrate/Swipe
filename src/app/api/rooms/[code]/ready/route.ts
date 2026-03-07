@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
+import { generateBracketRound } from '@/lib/challenge';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
@@ -36,15 +37,26 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ cod
 
   if (allReady) {
     // Check if there are any suggestions
-    const { count } = await db
+    const { data: suggestions } = await db
       .from('suggestions')
-      .select('id', { count: 'exact', head: true })
+      .select('id')
       .eq('room_id', room.id);
 
-    if ((count ?? 0) === 0) {
+    if (!suggestions || suggestions.length === 0) {
       // No suggestions – stay in submitting, mark unready
       await db.from('participants').update({ is_ready: false }).eq('room_id', room.id);
       return NextResponse.json({ advanced: false, reason: 'no_suggestions' });
+    }
+
+    if (room.draw_type === 'challenge') {
+      const matches = generateBracketRound(
+        suggestions.map((s: { id: string }) => s.id),
+        1,
+        room.id,
+      );
+      await db.from('challenge_matches').insert(matches.map((m) => ({ ...m, room_id: room.id })));
+      await db.from('rooms').update({ phase: 'challenge' }).eq('id', room.id);
+      return NextResponse.json({ advanced: true, phase: 'challenge' });
     }
 
     await db.from('rooms').update({ phase: 'voting' }).eq('id', room.id);

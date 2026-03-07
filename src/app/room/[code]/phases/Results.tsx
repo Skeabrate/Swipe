@@ -15,8 +15,9 @@ export function Results() {
   const { t } = useT();
   const confettiFired = useRef(false);
 
-  // Wheel mode — skip vote-based scoring
-  const isWheelMode = !!room.wheel_winner_id;
+  // Wheel or challenge mode — skip vote-based scoring
+  const isChallengeMode = room.draw_type === 'challenge';
+  const isWheelMode = !!room.wheel_winner_id && !isChallengeMode;
 
   const wheelWinner = useMemo((): SuggestionScore | null => {
     if (!room.wheel_winner_id) return null;
@@ -24,9 +25,15 @@ export function Results() {
     return s ? { suggestion: s, likes: 0 } : null;
   }, [room.wheel_winner_id, suggestions]);
 
+  const challengeWinner = useMemo((): SuggestionScore | null => {
+    if (!isChallengeMode || !room.wheel_winner_id) return null;
+    const s = suggestions.find((s) => s.id === room.wheel_winner_id);
+    return s ? { suggestion: s, likes: 0 } : null;
+  }, [isChallengeMode, room.wheel_winner_id, suggestions]);
+
   // Build scores
   const scores: SuggestionScore[] = useMemo(() => {
-    if (isWheelMode) return suggestions.map((s) => ({ suggestion: s, likes: 0 }));
+    if (isWheelMode || isChallengeMode) return suggestions.map((s) => ({ suggestion: s, likes: 0 }));
     const map: Record<string, number> = {};
     for (const s of suggestions) map[s.id] = 0;
     for (const v of votes) {
@@ -38,10 +45,11 @@ export function Results() {
     return suggestions
       .map((s) => ({ suggestion: s, likes: map[s.id] ?? 0 }))
       .sort((a, b) => b.likes - a.likes);
-  }, [suggestions, votes, tiebreakerPicks, isWheelMode]);
+  }, [suggestions, votes, tiebreakerPicks, isWheelMode, isChallengeMode]);
 
   // Determine winner
   const winner = useMemo((): SuggestionScore | null => {
+    if (isChallengeMode) return challengeWinner;
     if (isWheelMode) return wheelWinner;
     if (scores.length === 0) return null;
 
@@ -69,7 +77,7 @@ export function Results() {
     // No tiebreaker data – random deterministic
     const idx = room.id.charCodeAt(0) % topTied.length;
     return topTied[idx];
-  }, [scores, tiebreakerPicks, room.id, isWheelMode, wheelWinner]);
+  }, [scores, tiebreakerPicks, room.id, isWheelMode, wheelWinner, isChallengeMode, challengeWinner]);
 
   useEffect(() => {
     if (winner && !confettiFired.current) {
@@ -113,7 +121,7 @@ export function Results() {
           </div>
 
           <div className="relative rounded-3xl bg-gradient-to-br from-violet-600 to-purple-800 p-8 shadow-2xl shadow-violet-500/30">
-            <div className="absolute -top-3 -right-3 text-3xl">{isWheelMode ? '🎡' : '🏆'}</div>
+            <div className="absolute -top-3 -right-3 text-3xl">{isChallengeMode ? '⚔️' : isWheelMode ? '🎡' : '🏆'}</div>
             <p className="text-4xl leading-tight font-black text-white">
               {winner.suggestion.title}
             </p>
@@ -122,7 +130,9 @@ export function Results() {
                 {t.byAuthor(winner.suggestion.participant.name)}
               </p>
             )}
-            {isWheelMode ? (
+            {isChallengeMode ? (
+              <p className="mt-4 text-sm text-white/60">{t.wonTheBracket}</p>
+            ) : isWheelMode ? (
               <p className="mt-4 text-sm text-white/60">{t.chosenByWheel} 🎡</p>
             ) : (
               <p className="mt-4 text-sm text-white/60">
@@ -162,7 +172,7 @@ export function Results() {
                     {i + 1}
                   </span>
                   <span className="flex-1 text-sm font-medium text-white">{suggestion.title}</span>
-                  {!isWheelMode && (
+                  {!isWheelMode && !isChallengeMode && (
                     <div className="flex flex-shrink-0 items-center gap-3 text-xs">
                       <span className="flex items-center gap-1 text-green-400">
                         <ThumbsUp size={12} /> {likes}

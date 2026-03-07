@@ -32,6 +32,7 @@ export default function Home() {
   const [maxSuggestions, setMaxSuggestions] = useState(10);
   const [anonymous, setAnonymous] = useState(false);
   const [ideasMode, setIdeasMode] = useState<'open' | 'predefined'>('open');
+  const [drawType, setDrawType] = useState<'standard' | 'challenge'>('standard');
   const [predefinedIdeas, setPredefinedIdeas] = useState<string[]>([]);
   const [newIdea, setNewIdea] = useState('');
 
@@ -55,6 +56,7 @@ export default function Home() {
         anonymous,
         ideasMode,
         predefinedIdeas,
+        drawType,
       }),
     onSuccess: (data) => {
       saveSession({
@@ -408,6 +410,29 @@ export default function Home() {
                   <p className="mt-0.5 text-xs text-white/40">{t.anonymousVotingDesc}</p>
                 </div>
                 <Switch checked={anonymous} onCheckedChange={setAnonymous} />
+              </div>
+
+              {/* Draw type toggle */}
+              <div className="space-y-3 rounded-2xl bg-white/5 px-4 py-4">
+                <p className="text-sm text-white/70">{t.drawTypeLabel}</p>
+                <div className="flex gap-2">
+                  {(['standard', 'challenge'] as const).map((d) => (
+                    <button
+                      key={d}
+                      onClick={() => setDrawType(d)}
+                      className={`flex flex-1 flex-col items-center rounded-xl py-2.5 text-sm font-medium transition-all ${
+                        drawType === d
+                          ? 'bg-violet-600 text-white'
+                          : 'bg-white/10 text-white/50 hover:bg-white/15 hover:text-white'
+                      }`}
+                    >
+                      <span>{d === 'standard' ? t.drawTypeStandard : t.drawTypeChallenge}</span>
+                      <span className={`mt-0.5 text-xs font-normal ${drawType === d ? 'text-white/70' : 'text-white/30'}`}>
+                        {d === 'standard' ? t.drawTypeStandardDesc : t.drawTypeChallengeDesc}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 

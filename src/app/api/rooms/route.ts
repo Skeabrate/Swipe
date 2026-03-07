@@ -4,7 +4,7 @@ import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
 import { generateRoomCode } from '@/lib/roomCode';
 
 export async function POST(req: NextRequest) {
-  const { name, topic, maxSuggestions, anonymous, ideasMode, predefinedIdeas } = await req.json();
+  const { name, topic, maxSuggestions, anonymous, ideasMode, predefinedIdeas, drawType } = await req.json();
   const { userId } = await auth();
 
   if (!name?.trim() || !topic?.trim()) {
@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
       max_suggestions: maxSuggestions ?? 10,
       anonymous: anonymous ?? false,
       ideas_mode: ideasMode ?? 'open',
+      draw_type: drawType ?? 'standard',
       host_session_token: sessionToken,
       ...(userId ? { clerk_user_id: userId } : {}),
     })

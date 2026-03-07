@@ -19,6 +19,8 @@ export default async function RoomPage({ params }: Props) {
     { data: suggestions },
     { data: votes },
     { data: tiebreakerPicks },
+    { data: challengeMatches },
+    { data: challengeVotes },
   ] = await Promise.all([
     db.from('participants').select('*').eq('room_id', room.id).order('created_at'),
     db
@@ -28,10 +30,12 @@ export default async function RoomPage({ params }: Props) {
       .order('created_at'),
     db.from('votes').select('*').eq('room_id', room.id),
     db.from('tiebreaker_picks').select('*').eq('room_id', room.id),
+    db.from('challenge_matches').select('*').eq('room_id', room.id).order('round').order('match_index'),
+    db.from('challenge_votes').select('*').eq('room_id', room.id),
   ]);
 
   return (
-    <main className="min-h-dvh overflow-auto bg-[#0a0a0f]">
+    <main className="h-dvh overflow-auto bg-[#0a0a0f]">
       <SessionLoader
         initialData={{
           room,
@@ -39,6 +43,8 @@ export default async function RoomPage({ params }: Props) {
           suggestions: (suggestions as never) ?? [],
           votes: votes ?? [],
           tiebreakerPicks: tiebreakerPicks ?? [],
+          challengeMatches: challengeMatches ?? [],
+          challengeVotes: challengeVotes ?? [],
         }}
       />
     </main>

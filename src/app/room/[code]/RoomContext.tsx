@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext } from 'react';
-import { Room, Participant, Suggestion, Vote, TiebreakerPick, LocalSession } from '@/types';
+import { Room, Participant, Suggestion, Vote, TiebreakerPick, ChallengeMatch, ChallengeVote, LocalSession } from '@/types';
 
 export interface RoomContextValue {
   room: Room;
@@ -9,10 +9,14 @@ export interface RoomContextValue {
   suggestions: Suggestion[];
   votes: Vote[];
   tiebreakerPicks: TiebreakerPick[];
+  challengeMatches: ChallengeMatch[];
+  challengeVotes: ChallengeVote[];
   session: LocalSession;
   isHost: boolean;
   myVotes: Vote[];
   myPick: TiebreakerPick | undefined;
+  currentMatch: ChallengeMatch | undefined;
+  myMatchVote: (matchId: string) => ChallengeVote | undefined;
 }
 
 export const RoomContext = createContext<RoomContextValue | null>(null);

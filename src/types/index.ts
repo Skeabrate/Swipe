@@ -1,4 +1,4 @@
-export type Phase = 'lobby' | 'submitting' | 'voting' | 'tiebreaker' | 'wheel' | 'results';
+export type Phase = 'lobby' | 'submitting' | 'voting' | 'tiebreaker' | 'wheel' | 'challenge' | 'results';
 
 export interface Room {
   id: string;
@@ -9,8 +9,29 @@ export interface Room {
   max_suggestions: number;
   anonymous: boolean;
   ideas_mode: 'open' | 'predefined';
+  draw_type: 'standard' | 'challenge';
   created_at: string;
   wheel_winner_id?: string | null;
+}
+
+export interface ChallengeMatch {
+  id: string;
+  room_id: string;
+  round: number;
+  match_index: number;
+  suggestion_id_1: string;
+  suggestion_id_2: string | null;
+  winner_id: string | null;
+  created_at: string;
+}
+
+export interface ChallengeVote {
+  id: string;
+  room_id: string;
+  match_id: string;
+  participant_id: string;
+  suggestion_id: string;
+  created_at: string;
 }
 
 export interface Participant {

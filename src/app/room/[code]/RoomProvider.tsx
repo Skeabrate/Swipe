@@ -1,7 +1,7 @@
 'use client';
 
 import { getSupabaseClient } from '@/lib/supabase';
-import { LocalSession, Participant, Room, Suggestion, TiebreakerPick, Vote } from '@/types';
+import { ChallengeMatch, ChallengeVote, LocalSession, Participant, Room, Suggestion, TiebreakerPick, Vote } from '@/types';
 import { useEffect, useReducer } from 'react';
 import { RoomContext } from './RoomContext';
 
@@ -11,6 +11,8 @@ interface State {
   suggestions: Suggestion[];
   votes: Vote[];
   tiebreakerPicks: TiebreakerPick[];
+  challengeMatches: ChallengeMatch[];
+  challengeVotes: ChallengeVote[];
 }
 
 type Action =
@@ -20,7 +22,9 @@ type Action =
   | { type: 'ADD_SUGGESTION'; suggestion: Suggestion }
   | { type: 'REMOVE_SUGGESTION'; id: string }
   | { type: 'UPSERT_VOTE'; vote: Vote }
-  | { type: 'UPSERT_TIEBREAKER'; pick: TiebreakerPick };
+  | { type: 'UPSERT_TIEBREAKER'; pick: TiebreakerPick }
+  | { type: 'UPSERT_CHALLENGE_MATCH'; match: ChallengeMatch }
+  | { type: 'ADD_CHALLENGE_VOTE'; vote: ChallengeVote };
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
@@ -57,6 +61,20 @@ function reducer(state: State, action: Action): State {
         tiebreakerPicks: state.tiebreakerPicks.some((t) => t.id === action.pick.id)
           ? state.tiebreakerPicks.map((t) => (t.id === action.pick.id ? action.pick : t))
           : [...state.tiebreakerPicks, action.pick],
+      };
+    case 'UPSERT_CHALLENGE_MATCH':
+      return {
+        ...state,
+        challengeMatches: state.challengeMatches.some((m) => m.id === action.match.id)
+          ? state.challengeMatches.map((m) => (m.id === action.match.id ? action.match : m))
+          : [...state.challengeMatches, action.match],
+      };
+    case 'ADD_CHALLENGE_VOTE':
+      return {
+        ...state,
+        challengeVotes: state.challengeVotes.some((v) => v.id === action.vote.id)
+          ? state.challengeVotes
+          : [...state.challengeVotes, action.vote],
       };
     default:
       return state;
@@ -176,6 +194,42 @@ export function RoomProvider({ initial, session, children }: Props) {
           dispatch({ type: 'UPSERT_TIEBREAKER', pick: payload.new as TiebreakerPick });
         },
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'challenge_matches',
+          filter: `room_id=eq.${roomId}`,
+        },
+        (payload) => {
+          dispatch({ type: 'UPSERT_CHALLENGE_MATCH', match: payload.new as ChallengeMatch });
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'challenge_matches',
+          filter: `room_id=eq.${roomId}`,
+        },
+        (payload) => {
+          dispatch({ type: 'UPSERT_CHALLENGE_MATCH', match: payload.new as ChallengeMatch });
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'challenge_votes',
+          filter: `room_id=eq.${roomId}`,
+        },
+        (payload) => {
+          dispatch({ type: 'ADD_CHALLENGE_VOTE', vote: payload.new as ChallengeVote });
+        },
+      )
       .subscribe();
 
     return () => {
@@ -188,6 +242,15 @@ export function RoomProvider({ initial, session, children }: Props) {
   const myVotes = state.votes.filter((v) => v.participant_id === session.participantId);
   const myPick = state.tiebreakerPicks.find((t) => t.participant_id === session.participantId);
 
+  const currentMatch = state.challengeMatches
+    .filter((m) => m.winner_id === null)
+    .sort((a, b) => a.round - b.round || a.match_index - b.match_index)[0];
+
+  const myMatchVote = (matchId: string) =>
+    state.challengeVotes.find(
+      (v) => v.match_id === matchId && v.participant_id === session.participantId,
+    );
+
   return (
     <RoomContext.Provider
       value={{
@@ -196,10 +259,14 @@ export function RoomProvider({ initial, session, children }: Props) {
         suggestions: state.suggestions,
         votes: state.votes,
         tiebreakerPicks: state.tiebreakerPicks,
+        challengeMatches: state.challengeMatches,
+        challengeVotes: state.challengeVotes,
         session,
         isHost,
         myVotes,
         myPick,
+        currentMatch,
+        myMatchVote,
       }}
     >
       {children}

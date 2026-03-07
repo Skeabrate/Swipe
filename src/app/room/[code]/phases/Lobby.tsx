@@ -209,7 +209,13 @@ export function Lobby() {
         {isHost ? (
           <>
             <Button
-              onClick={() => startRoomMutation.mutate(isPredefined ? 'voting' : 'submitting')}
+              onClick={() => {
+                if (isPredefined) {
+                  startRoomMutation.mutate(room.draw_type === 'challenge' ? 'challenge' : 'voting');
+                } else {
+                  startRoomMutation.mutate('submitting');
+                }
+              }}
               disabled={startRoomMutation.isPending || participants.length < 1}
               className="h-14 w-full rounded-2xl border-0 bg-gradient-to-r from-violet-600 to-purple-600 text-base font-bold text-white hover:from-violet-500 hover:to-purple-500"
             >
@@ -217,11 +223,16 @@ export function Lobby() {
                 t.startingLabel
               ) : (
                 <span className="flex items-center gap-2">
-                  {isPredefined ? t.startVoting : t.startEveryoneAdd} <ArrowRight size={18} />
+                  {isPredefined
+                    ? room.draw_type === 'challenge'
+                      ? t.startChallenge
+                      : t.startVoting
+                    : t.startEveryoneAdd}{' '}
+                  <ArrowRight size={18} />
                 </span>
               )}
             </Button>
-            {isPredefined && <SpinWheelButton />}
+            {isPredefined && room.draw_type === 'standard' && <SpinWheelButton />}
           </>
         ) : (
           <div className="py-2 text-center text-sm text-white/40">{t.waitingForHost}</div>

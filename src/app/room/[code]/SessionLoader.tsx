@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from 'react';
 import { loadSession } from '@/lib/session';
-import { Room, Participant, Suggestion, Vote, TiebreakerPick, LocalSession } from '@/types';
+import { Room, Participant, Suggestion, Vote, TiebreakerPick, ChallengeMatch, ChallengeVote, LocalSession } from '@/types';
 import { JoinGate } from './JoinGate';
 import { RoomProvider } from './RoomProvider';
 import { RoomShell } from './RoomShell';
@@ -16,6 +16,8 @@ interface InitialData {
   suggestions: Suggestion[];
   votes: Vote[];
   tiebreakerPicks: TiebreakerPick[];
+  challengeMatches: ChallengeMatch[];
+  challengeVotes: ChallengeVote[];
 }
 
 interface Props {

@@ -49,7 +49,12 @@ export function Submitting() {
   });
 
   const forceStartMutation = useMutation({
-    mutationFn: () => api.advancePhase(room.code, 'voting', session.token),
+    mutationFn: () =>
+      api.advancePhase(
+        room.code,
+        room.draw_type === 'challenge' ? 'challenge' : 'voting',
+        session.token,
+      ),
     onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed'),
   });
 
@@ -187,7 +192,7 @@ export function Submitting() {
             </button>
           )}
 
-        {isHost && <SpinWheelButton />}
+        {isHost && room.draw_type === 'standard' && <SpinWheelButton />}
       </div>
     </div>
   );

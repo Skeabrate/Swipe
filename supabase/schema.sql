@@ -80,7 +80,8 @@ create policy "public_read" on tiebreaker_picks for select using (true);
 
 -- ─── Realtime ─────────────────────────────────────────────────────────────────
 -- In Supabase dashboard: Database → Replication → supabase_realtime publication
--- Make sure all 5 tables above are added to the publication.
+-- Make sure all tables are added: rooms, participants, suggestions, votes,
+-- tiebreaker_picks, challenge_matches, challenge_votes
 
 -- ─── Auth (Clerk) additions ────────────────────────────────────────────────────
 -- Run these after setting up Clerk
@@ -89,6 +90,36 @@ alter table participants add column if not exists clerk_user_id text;
 alter table rooms add column if not exists clerk_user_id text;
 alter table rooms add column if not exists wheel_winner_id uuid references suggestions(id) on delete set null;
 alter table rooms add column if not exists ideas_mode text not null default 'open' check (ideas_mode in ('open', 'predefined'));
+alter table rooms add column if not exists draw_type text not null default 'standard' check (draw_type in ('standard', 'challenge'));
+
+create table if not exists challenge_matches (
+  id             uuid primary key default gen_random_uuid(),
+  room_id        uuid not null references rooms(id) on delete cascade,
+  round          int not null,
+  match_index    int not null,
+  suggestion_id_1 uuid not null references suggestions(id),
+  suggestion_id_2 uuid references suggestions(id), -- null = bye
+  winner_id      uuid references suggestions(id),  -- set when match is resolved
+  created_at     timestamptz default now()
+);
+
+create table if not exists challenge_votes (
+  id             uuid primary key default gen_random_uuid(),
+  room_id        uuid not null references rooms(id) on delete cascade,
+  match_id       uuid not null references challenge_matches(id) on delete cascade,
+  participant_id uuid not null references participants(id) on delete cascade,
+  suggestion_id  uuid not null references suggestions(id),
+  created_at     timestamptz default now(),
+  unique(match_id, participant_id)
+);
+
+alter table challenge_matches enable row level security;
+alter table challenge_votes enable row level security;
+alter table challenge_matches replica identity full;
+alter table challenge_votes replica identity full;
+
+create policy "public_read" on challenge_matches for select using (true);
+create policy "public_read" on challenge_votes for select using (true);
 
 create table if not exists user_profiles (
   id            uuid primary key default gen_random_uuid(),

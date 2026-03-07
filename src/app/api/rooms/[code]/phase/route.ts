@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin';
+import { generateBracketRound } from '@/lib/challenge';
 
 // Host-only: advance phase manually
 export async function POST(req: NextRequest, { params }: { params: Promise<{ code: string }> }) {
@@ -21,10 +22,38 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ cod
     if (room.phase !== 'lobby')
       return NextResponse.json({ error: 'Invalid transition' }, { status: 400 });
     await db.from('rooms').update({ phase: 'submitting' }).eq('id', room.id);
+  } else if (phase === 'challenge') {
+    // Start challenge mode bracket
+    const fromLobbyPredefined = room.phase === 'lobby' && room.ideas_mode === 'predefined';
+    if (room.phase !== 'submitting' && !fromLobbyPredefined)
+      return NextResponse.json({ error: 'Invalid transition' }, { status: 400 });
+    if (room.draw_type !== 'challenge')
+      return NextResponse.json({ error: 'Room is not in challenge mode' }, { status: 400 });
+    const { data: suggestionsList } = await db
+      .from('suggestions')
+      .select('id')
+      .eq('room_id', room.id);
+    if (!suggestionsList || suggestionsList.length < 2)
+      return NextResponse.json(
+        { error: 'Need at least 2 suggestions to start challenge' },
+        { status: 400 },
+      );
+    const matches = generateBracketRound(
+      suggestionsList.map((s: { id: string }) => s.id),
+      1,
+      room.id,
+    );
+    await db.from('challenge_matches').insert(matches.map((m) => ({ ...m, room_id: room.id })));
+    await db.from('rooms').update({ phase: 'challenge' }).eq('id', room.id);
   } else if (phase === 'voting' && room.phase === 'lobby') {
     // Predefined mode: skip submitting, go straight to voting
     if (room.ideas_mode !== 'predefined')
       return NextResponse.json({ error: 'Invalid transition' }, { status: 400 });
+    if (room.draw_type === 'challenge')
+      return NextResponse.json(
+        { error: 'Use challenge phase for challenge mode rooms' },
+        { status: 400 },
+      );
     const { count: predefinedCount } = await db
       .from('suggestions')
       .select('id', { count: 'exact', head: true })
@@ -39,6 +68,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ cod
     // Force close submissions (host override)
     if (room.phase !== 'submitting')
       return NextResponse.json({ error: 'Invalid transition' }, { status: 400 });
+    if (room.draw_type === 'challenge')
+      return NextResponse.json(
+        { error: 'Use challenge phase for challenge mode rooms' },
+        { status: 400 },
+      );
     const { count } = await db
       .from('suggestions')
       .select('id', { count: 'exact', head: true })
